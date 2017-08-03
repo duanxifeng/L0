@@ -443,7 +443,7 @@ func (c *Context) BindJSON(obj interface{}) error {
 // See the binding package.
 func (c *Context) MustBindWith(obj interface{}, b binding.Binding) (err error) {
 	if err = c.ShouldBindWith(obj, b); err != nil {
-		c.AbortWithError(400, err).SetType(ErrorTypeBind)
+		//c.AbortWithError(400, err).SetType(ErrorTypeBind)
 	}
 
 	return

@@ -122,6 +122,10 @@ func Run(addr ...string) {
 					tx.Commit()
 				}
 			}
+            c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+            c.Writer.Header().Set("Content-type", "application/json")
+            c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE")
+            c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 			function(c)
 		})
 	}
