@@ -1,0 +1,7 @@
+database:
+    engine: "mysql"
+    name: "mydb"
+    user: "root"
+    password: "root"
+    host: ""
+    port: 3306
