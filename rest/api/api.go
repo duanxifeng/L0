@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	gin "gopkg.in/gin-gonic/gin.v1"
@@ -101,7 +102,7 @@ func Run(addr ...string) {
 		policys = append(policys, &policy.Policy{
 			Name:   "status-get",
 			Descr:  status.GetDescr(),
-			API:    "/statuse-get",
+			API:    "/status-get",
 			Action: status.TableName(),
 			Params: status.GetParams(),
 		})
@@ -318,19 +319,22 @@ func Run(addr ...string) {
 		json.Unmarshal([]byte(opolicy.Params), &params)
 		action := opolicy.Action
 		router.RegisterPost(opolicy.API, func(c *gin.Context) {
-			for k := range params {
-				params[k] = c.PostForm(k)
+			url := c.Request.URL.String()
+			if !strings.Contains(url, "-get") {
+				for k := range params {
+					params[k] = c.PostForm(k)
+				}
+				paramsBytes, _ := json.Marshal(params)
+				// add history
+				history := &history.History{
+					API:     url,
+					Action:  action,
+					Params:  string(paramsBytes),
+					Created: time.Now(),
+					Updated: time.Now(),
+				}
+				addHistory(history)
 			}
-			paramsBytes, _ := json.Marshal(params)
-			// add history
-			history := &history.History{
-				API:     c.Request.URL.String(),
-				Action:  action,
-				Params:  string(paramsBytes),
-				Created: time.Now(),
-				Updated: time.Now(),
-			}
-			addHistory(history)
 
 			function(c)
 		})
