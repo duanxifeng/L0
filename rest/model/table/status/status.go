@@ -2,6 +2,7 @@ package status
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"time"
@@ -20,6 +21,56 @@ type Status struct {
 	Descr   string    `json:"descr"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
+}
+
+func (status *Status) GetDescr() string {
+	return fmt.Sprintf(` list %s `, status.TableName())
+}
+func (status *Status) GetParams() string {
+	bytes, _ := json.Marshal(status)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (status *Status) PostDescr() string {
+	return fmt.Sprintf(` add %s `, status.TableName())
+}
+func (status *Status) PostParams() string {
+	bytes, _ := json.Marshal(status)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "id")
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (status *Status) PutDescr() string {
+	return fmt.Sprintf(` modify %s `, status.TableName())
+}
+func (status *Status) PutParams() string {
+	bytes, _ := json.Marshal(status)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (status *Status) DeleteDescr() string {
+	return fmt.Sprintf(` delete %s `, status.TableName())
+}
+func (status *Status) DeleteParams() string {
+	bytes, _ := json.Marshal(status)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
 }
 
 //Condition
@@ -104,6 +155,8 @@ func (status *Status) QueryRow(tx *sql.Tx) error {
 
 //Insert
 func (status *Status) Insert(tx *sql.Tx) error {
+	status.Created = time.Now()
+	status.Updated = status.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, descr, created, updated) values(?, ?, ?, ?)", status.TableName()),
 		status.Name, status.Descr, status.Created, status.Updated)
 	if err != nil {

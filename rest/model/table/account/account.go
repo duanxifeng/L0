@@ -2,6 +2,7 @@ package account
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -21,6 +22,56 @@ type Account struct {
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 	user    *user.User
+}
+
+func (account *Account) GetDescr() string {
+	return fmt.Sprintf(` list %s `, account.TableName())
+}
+func (account *Account) GetParams() string {
+	bytes, _ := json.Marshal(account)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (account *Account) PostDescr() string {
+	return fmt.Sprintf(` add %s `, account.TableName())
+}
+func (account *Account) PostParams() string {
+	bytes, _ := json.Marshal(account)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "id")
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (account *Account) PutDescr() string {
+	return fmt.Sprintf(` modify %s `, account.TableName())
+}
+func (account *Account) PutParams() string {
+	bytes, _ := json.Marshal(account)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (account *Account) DeleteDescr() string {
+	return fmt.Sprintf(` delete %s `, account.TableName())
+}
+func (account *Account) DeleteParams() string {
+	bytes, _ := json.Marshal(account)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
 }
 
 //Condition
@@ -96,6 +147,8 @@ func (account *Account) Query(db *sql.DB, condition string) ([]table.ITable, err
 
 //Insert
 func (account *Account) Insert(tx *sql.Tx) error {
+	account.Created = time.Now()
+	account.Updated = account.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(addr, user_id, created, updated) values(?, ?, ?, ?)", account.TableName()),
 		account.Address, account.UserID, account.Created, account.Updated)
 	if err != nil {

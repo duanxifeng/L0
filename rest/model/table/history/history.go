@@ -2,6 +2,7 @@ package history
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -20,6 +21,56 @@ type History struct {
 	Params  string    `json:"params"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
+}
+
+func (history *History) GetDescr() string {
+	return fmt.Sprintf(` list %s `, history.TableName())
+}
+func (history *History) GetParams() string {
+	bytes, _ := json.Marshal(history)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (history *History) PostDescr() string {
+	return fmt.Sprintf(` add %s `, history.TableName())
+}
+func (history *History) PostParams() string {
+	bytes, _ := json.Marshal(history)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "id")
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (history *History) PutDescr() string {
+	return fmt.Sprintf(` modify %s `, history.TableName())
+}
+func (history *History) PutParams() string {
+	bytes, _ := json.Marshal(history)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (history *History) DeleteDescr() string {
+	return fmt.Sprintf(` delete %s `, history.TableName())
+}
+func (history *History) DeleteParams() string {
+	bytes, _ := json.Marshal(history)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
 }
 
 //Condition
@@ -43,6 +94,13 @@ func (history *History) Condition() (condition string) {
 			condition += " and "
 		}
 		condition += fmt.Sprintf(" action='%s' ", history.Action)
+	}
+
+	if history.Params != "" {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" params='%s' ", history.Action)
 	}
 	return
 }
@@ -96,6 +154,8 @@ func (history *History) Query(db *sql.DB, condition string) ([]table.ITable, err
 
 //Insert
 func (history *History) Insert(tx *sql.Tx) error {
+	history.Created = time.Now()
+	history.Updated = history.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(api, action, params, created, updated) values(?, ?, ?, ?, ?)", history.TableName()),
 		history.API, history.Action, history.Params, history.Created, history.Updated)
 	if err != nil {

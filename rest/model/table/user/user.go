@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -26,6 +27,58 @@ type User struct {
 	Updated  time.Time `json:"updated"`
 	policys  []*policy.Policy
 	status   *status.Status
+}
+
+func (user *User) GetDescr() string {
+	return fmt.Sprintf(` list %s `, user.TableName())
+}
+func (user *User) GetParams() string {
+	bytes, _ := json.Marshal(user)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "password")
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (user *User) PostDescr() string {
+	return fmt.Sprintf(` add %s `, user.TableName())
+}
+func (user *User) PostParams() string {
+	bytes, _ := json.Marshal(user)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "id")
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (user *User) PutDescr() string {
+	return fmt.Sprintf(` modify %s `, user.TableName())
+}
+func (user *User) PutParams() string {
+	bytes, _ := json.Marshal(user)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
+}
+func (user *User) DeleteDescr() string {
+	return fmt.Sprintf(` delete %s `, user.TableName())
+}
+func (user *User) DeleteParams() string {
+	bytes, _ := json.Marshal(user)
+	var params map[string]interface{}
+	json.Unmarshal(bytes, &params)
+	delete(params, "password")
+	delete(params, "created")
+	delete(params, "updated")
+	bytes, _ = json.Marshal(params)
+	return string(bytes)
 }
 
 //Condition
@@ -120,6 +173,8 @@ func (user *User) QueryRow(tx *sql.Tx) error {
 
 //Insert
 func (user *User) Insert(tx *sql.Tx) error {
+	user.Created = time.Now()
+	user.Updated = user.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, created, updated) values(?, ?, ?, ?, ?, ?, ?)", user.TableName()),
 		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Created, user.Updated)
 	if err != nil {
