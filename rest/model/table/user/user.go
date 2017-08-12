@@ -225,6 +225,8 @@ func (user *User) Update(tx *sql.Tx) error {
 }
 
 func (user *User) InsertOrUpdate(tx *sql.Tx) error {
+	user.Created = time.Now()
+	user.Updated = user.Created
 	_, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, created, updated) values(?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE password=values(password), metadata=values(metadata), policy_id=values(policy_id), status_id= values(status_id), created=values(created), updated=values(updated)", user.TableName()),
 		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Created, user.Updated)
 	if err != nil {

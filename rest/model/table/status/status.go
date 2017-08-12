@@ -207,6 +207,8 @@ func (status *Status) Update(tx *sql.Tx) error {
 }
 
 func (status *Status) InsertOrUpdate(tx *sql.Tx) error {
+	status.Created = time.Now()
+	status.Updated = status.Created
 	_, err := tx.Exec(fmt.Sprintf("insert into %s(name, descr, created, updated) values(?, ?, ?, ?) ON DUPLICATE KEY UPDATE descr=values(descr), updated=values(updated)", status.TableName()),
 		status.Name, status.Descr, status.Created, status.Updated)
 	if err != nil {

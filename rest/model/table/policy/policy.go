@@ -228,6 +228,8 @@ func (policy *Policy) Update(tx *sql.Tx) error {
 }
 
 func (policy *Policy) InsertOrUpdate(tx *sql.Tx) error {
+	policy.Created = time.Now()
+	policy.Updated = policy.Created
 	policy.ID = policy.getNextID(tx)
 	_, err := tx.Exec(fmt.Sprintf("insert into %s(id, name, descr, api, action, params,created, updated) values (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE descr=values(descr), api=values(api), action=values(action), params=values(params), updated=values(updated)", policy.TableName()),
 		policy.ID, policy.Name, policy.Descr, policy.API, policy.Action, policy.Params, policy.Created, policy.Updated)
