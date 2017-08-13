@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bocheninc/L0/rest/model/table"
+	"github.com/bocheninc/L0/rest/model/table/status"
 	"github.com/bocheninc/L0/rest/model/table/user"
 )
 
@@ -16,12 +17,14 @@ func init() {
 }
 
 type Account struct {
-	ID      int64     `json:"id"`
-	Address string    `json:"addr"`
-	UserID  int64     `json:"user_id"`
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
-	user    *user.User
+	ID       int64     `json:"id"`
+	Address  string    `json:"addr"`
+	UserID   int64     `json:"user_id"`
+	StatusID int64     `json:"status_id"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated"`
+	user     *user.User
+	status   *status.Status
 }
 
 func (account *Account) GetDescr() string {
@@ -90,6 +93,13 @@ func (account *Account) Condition() (condition string) {
 		condition += fmt.Sprintf(" addr='%s' ", account.Address)
 	}
 
+	if account.StatusID != 0 {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" status_id='%d' ", account.StatusID)
+	}
+
 	if account.UserID != 0 {
 		if condition != "" {
 			condition += " and "
@@ -104,12 +114,23 @@ func (account *Account) TableName() string {
 	return "account"
 }
 
+func (account *Account) validate(tx *sql.Tx) error {
+	if account.Address == "" {
+		return fmt.Errorf("addr is empty")
+	}
+	if _, err := account.User(tx); err != nil {
+		return fmt.Errorf("user_id %d is not exist", account.UserID)
+	}
+	return nil
+}
+
 //CreateIfNotExist
 func (account *Account) CreateIfNotExist(db *sql.DB) (string, error) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL AUTO_INCREMENT,
-	addr VARCHAR(400) NOT NULL,
+	addr VARCHAR(255) NOT NULL UNIQUE,
+	status_id INT NOT NULL,
 	user_id INT NOT NULL,
 	created DATETIME NOT NULL,
 	updated DATETIME NOT NULL,
@@ -147,6 +168,9 @@ func (account *Account) Query(db *sql.DB, condition string) ([]table.ITable, err
 
 //Insert
 func (account *Account) Insert(tx *sql.Tx) error {
+	if err := account.validate(tx); err != nil {
+		return err
+	}
 	account.Created = time.Now()
 	account.Updated = account.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(addr, user_id, created, updated) values(?, ?, ?, ?)", account.TableName()),
@@ -185,6 +209,9 @@ func (account *Account) Delete(tx *sql.Tx, condition string) error {
 
 //Update
 func (account *Account) Update(tx *sql.Tx) error {
+	if err := account.validate(tx); err != nil {
+		return err
+	}
 	account.Updated = time.Now()
 	res, err := tx.Exec(fmt.Sprintf("update %s set addr=?, user_id=?,  created=?, updated=? where id=? ", account.TableName()),
 		account.Address, account.UserID, account.Created, account.Updated, account.ID)
@@ -196,6 +223,17 @@ func (account *Account) Update(tx *sql.Tx) error {
 		return fmt.Errorf("not found")
 	}
 	return nil
+}
+
+func (account *Account) Status(tx *sql.Tx) (*status.Status, error) {
+	if account.status == nil {
+		account.status = status.NewStatus()
+		account.status.ID = account.StatusID
+		if err := account.status.QueryRow(tx); err != nil {
+			return nil, err
+		}
+	}
+	return account.status, nil
 }
 
 func (account *Account) User(tx *sql.Tx) (*user.User, error) {

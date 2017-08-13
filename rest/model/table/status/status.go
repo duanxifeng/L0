@@ -102,6 +102,12 @@ func (status *Status) Condition() (condition string) {
 func (status *Status) TableName() string {
 	return "status"
 }
+func (status *Status) validate(tx *sql.Tx) error {
+	if status.Name == "" {
+		return fmt.Errorf("name is empty")
+	}
+	return nil
+}
 
 //CreateIfNotExist
 func (status *Status) CreateIfNotExist(db *sql.DB) (string, error) {
@@ -109,7 +115,7 @@ func (status *Status) CreateIfNotExist(db *sql.DB) (string, error) {
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL AUTO_INCREMENT,
 	name VARCHAR(20) NOT NULL UNIQUE,
-	descr VARCHAR(200),
+	descr VARCHAR(255),
 	created DATETIME NOT NULL,
 	updated DATETIME NOT NULL,
 	PRIMARY KEY (id)
@@ -146,7 +152,7 @@ func (status *Status) Query(db *sql.DB, condition string) ([]table.ITable, error
 
 //QueryRow
 func (status *Status) QueryRow(tx *sql.Tx) error {
-	row := tx.QueryRow(fmt.Sprintf("select name, descr, created, updated fromm %s where id=?", status.TableName()), status.ID)
+	row := tx.QueryRow(fmt.Sprintf("select name, descr, created, updated from %s where id=?", status.TableName()), status.ID)
 	if err := row.Scan(&status.Name, &status.Descr, &status.Created, &status.Updated); err != nil {
 		return err
 	}
@@ -155,6 +161,9 @@ func (status *Status) QueryRow(tx *sql.Tx) error {
 
 //Insert
 func (status *Status) Insert(tx *sql.Tx) error {
+	if err := status.validate(tx); err != nil {
+		return err
+	}
 	status.Created = time.Now()
 	status.Updated = status.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, descr, created, updated) values(?, ?, ?, ?)", status.TableName()),
@@ -193,6 +202,9 @@ func (status *Status) Delete(tx *sql.Tx, condition string) error {
 
 //Update
 func (status *Status) Update(tx *sql.Tx) error {
+	if err := status.validate(tx); err != nil {
+		return err
+	}
 	status.Updated = time.Now()
 	res, err := tx.Exec(fmt.Sprintf("update %s set name=?, descr=?, created=?, updated=? where id=?", status.TableName()),
 		status.Name, status.Descr, status.Created, status.Updated, status.ID)
@@ -207,6 +219,9 @@ func (status *Status) Update(tx *sql.Tx) error {
 }
 
 func (status *Status) InsertOrUpdate(tx *sql.Tx) error {
+	if err := status.validate(tx); err != nil {
+		return err
+	}
 	status.Created = time.Now()
 	status.Updated = status.Created
 	_, err := tx.Exec(fmt.Sprintf("insert into %s(name, descr, created, updated) values(?, ?, ?, ?) ON DUPLICATE KEY UPDATE descr=values(descr), updated=values(updated)", status.TableName()),

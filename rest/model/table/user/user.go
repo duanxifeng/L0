@@ -117,14 +117,29 @@ func (user *User) Condition() (condition string) {
 func (user *User) TableName() string {
 	return "user"
 }
+func (user *User) validate(tx *sql.Tx) error {
+	if user.Name == "" {
+		return fmt.Errorf("name is empty")
+	}
+	if user.PassWord == "" {
+		return fmt.Errorf("password is empty")
+	}
+	if _, err := user.Policys(tx); err != nil {
+		return fmt.Errorf("policys_id %d is not exist", user.PolicyID)
+	}
+	if _, err := user.Status(tx); err != nil {
+		return fmt.Errorf("status_id %d is not exist", user.StatusID)
+	}
+	return nil
+}
 
 //CreateIfNotExist
 func (user *User) CreateIfNotExist(db *sql.DB) (string, error) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL AUTO_INCREMENT,
-	name VARCHAR(200) NOT NULL UNIQUE,
-	password VARCHAR(100) NOT NULL,
+	name VARCHAR(255) NOT NULL UNIQUE,
+	password VARCHAR(255) NOT NULL,
 	metadata TEXT NOT NULL,
 	policy_id INT NOT NULL,
 	status_id INT NOT NULL,
@@ -164,8 +179,8 @@ func (user *User) Query(db *sql.DB, condition string) ([]table.ITable, error) {
 
 //QueryRow
 func (user *User) QueryRow(tx *sql.Tx) error {
-	row := tx.QueryRow(fmt.Sprintf("select name, password, metadata, policy_id, status_id, created, updated fromm %s where id=?", user.TableName()), user.ID)
-	if err := row.Scan(&user.Name, &user.PassWord, user.Metadata, user.PolicyID, user.StatusID, &user.Created, &user.Updated); err != nil {
+	row := tx.QueryRow(fmt.Sprintf("select name, password, metadata, policy_id, status_id, created, updated from %s where id=?", user.TableName()), user.ID)
+	if err := row.Scan(&user.Name, &user.PassWord, &user.Metadata, &user.PolicyID, &user.StatusID, &user.Created, &user.Updated); err != nil {
 		return err
 	}
 	return nil
@@ -173,6 +188,9 @@ func (user *User) QueryRow(tx *sql.Tx) error {
 
 //Insert
 func (user *User) Insert(tx *sql.Tx) error {
+	if err := user.validate(tx); err != nil {
+		return err
+	}
 	user.Created = time.Now()
 	user.Updated = user.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, created, updated) values(?, ?, ?, ?, ?, ?, ?)", user.TableName()),
@@ -211,6 +229,9 @@ func (user *User) Delete(tx *sql.Tx, condition string) error {
 
 //Update
 func (user *User) Update(tx *sql.Tx) error {
+	if err := user.validate(tx); err != nil {
+		return err
+	}
 	user.Updated = time.Now()
 	res, err := tx.Exec(fmt.Sprintf("update %s set name=?, password=?, metadata=?, policy_id=?, status_id=?, created=?, updated=? where id=? ", user.TableName()),
 		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Created, user.Updated, user.ID)
@@ -225,6 +246,9 @@ func (user *User) Update(tx *sql.Tx) error {
 }
 
 func (user *User) InsertOrUpdate(tx *sql.Tx) error {
+	if err := user.validate(tx); err != nil {
+		return err
+	}
 	user.Created = time.Now()
 	user.Updated = user.Created
 	_, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, created, updated) values(?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE password=values(password), metadata=values(metadata), policy_id=values(policy_id), status_id= values(status_id), created=values(created), updated=values(updated)", user.TableName()),

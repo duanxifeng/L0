@@ -109,14 +109,17 @@ func (history *History) Condition() (condition string) {
 func (history *History) TableName() string {
 	return "history"
 }
+func (history *History) validate(tx *sql.Tx) error {
+	return nil
+}
 
 //CreateIfNotExist
 func (history *History) CreateIfNotExist(db *sql.DB) (string, error) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL AUTO_INCREMENT,
-	api VARCHAR(200) NOT NULL,
-	action TEXT NOT NULL,
+	api VARCHAR(255) NOT NULL,
+	action VARCHAR(255) NOT NULL,
 	params TEXT,
 	created DATETIME NOT NULL,
 	updated DATETIME NOT NULL,
@@ -154,6 +157,9 @@ func (history *History) Query(db *sql.DB, condition string) ([]table.ITable, err
 
 //Insert
 func (history *History) Insert(tx *sql.Tx) error {
+	if err := history.validate(tx); err != nil {
+		return err
+	}
 	history.Created = time.Now()
 	history.Updated = history.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(api, action, params, created, updated) values(?, ?, ?, ?, ?)", history.TableName()),
@@ -192,6 +198,9 @@ func (history *History) Delete(tx *sql.Tx, condition string) error {
 
 //Update
 func (history *History) Update(tx *sql.Tx) error {
+	if err := history.validate(tx); err != nil {
+		return err
+	}
 	history.Updated = time.Now()
 	res, err := tx.Exec(fmt.Sprintf("update %s set api=?, action=?, params=?,  created=?, updated=? where id=? ", history.TableName()),
 		history.API, history.Action, history.Params, history.Created, history.Updated, history.ID)

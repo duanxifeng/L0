@@ -126,16 +126,28 @@ func (policy *Policy) Condition() (condition string) {
 func (policy *Policy) TableName() string {
 	return "policy"
 }
+func (policy *Policy) validate(tx *sql.Tx) error {
+	if policy.Name == "" {
+		return fmt.Errorf("name is empty")
+	}
+	if policy.API == "" {
+		return fmt.Errorf("api is empty")
+	}
+	if policy.Action == "" {
+		return fmt.Errorf("api is empty")
+	}
+	return nil
+}
 
 //CreateIfNotExist
 func (policy *Policy) CreateIfNotExist(db *sql.DB) (string, error) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL,
-	name VARCHAR(200) NOT NULL UNIQUE,
+	name VARCHAR(255) NOT NULL UNIQUE,
 	descr TEXT,
-	api VARCHAR(200) NOT NULL,
-	action TEXT NOT NULL,
+	api VARCHAR(255) NOT NULL,
+	action VARCHAR(255) NOT NULL,
 	params TEXT,
 	created DATETIME NOT NULL,
 	updated DATETIME NOT NULL,
@@ -182,6 +194,9 @@ func (policy *Policy) QueryRow(tx *sql.Tx) error {
 
 //Insert
 func (policy *Policy) Insert(tx *sql.Tx) error {
+	if err := policy.validate(tx); err != nil {
+		return err
+	}
 	policy.Created = time.Now()
 	policy.Updated = policy.Created
 	policy.ID = policy.getNextID(tx)
@@ -214,6 +229,9 @@ func (policy *Policy) Delete(tx *sql.Tx, condition string) error {
 
 //Update
 func (policy *Policy) Update(tx *sql.Tx) error {
+	if err := policy.validate(tx); err != nil {
+		return err
+	}
 	policy.Updated = time.Now()
 	res, err := tx.Exec(fmt.Sprintf("update %s set name=?, descr=?, api=?, action=?, params=?, created=?, updated=? where id=?", policy.TableName()),
 		policy.Name, policy.Descr, policy.API, policy.Action, policy.Params, policy.Created, policy.Updated, policy.ID)
@@ -228,6 +246,9 @@ func (policy *Policy) Update(tx *sql.Tx) error {
 }
 
 func (policy *Policy) InsertOrUpdate(tx *sql.Tx) error {
+	if err := policy.validate(tx); err != nil {
+		return err
+	}
 	policy.Created = time.Now()
 	policy.Updated = policy.Created
 	policy.ID = policy.getNextID(tx)

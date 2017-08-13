@@ -297,7 +297,28 @@ func Run(addr ...string) {
 		tx.Commit()
 	}
 
+	tstatus := &status.Status{
+		Name: "on",
+	}
+	res, err := tstatus.Query(model.DB, "")
+	if err != nil {
+		panic(err)
+	}
+	statusID := res[0].(*status.Status).ID
+
+	tpolicy := &policy.Policy{}
+	res, err = tpolicy.Query(model.DB, "")
+	if err != nil {
+		panic(err)
+	}
+	policyID := int64(0)
+	for _, r := range res {
+		policyID = r.(*policy.Policy).ID | policyID
+	}
+
 	for _, user := range users {
+		user.StatusID = statusID
+		user.PolicyID = policyID
 		res, err := user.Query(model.DB, "")
 		if err != nil {
 			panic(err)
