@@ -167,12 +167,12 @@ func init() {
 		policyCtrl := controllers.NewPolicyController()
 
 		descrs := make(map[string]string, 0)
-		descrs["id"] = "id:操作权限ID"
-		descrs["name"] = "name:操作权限名称"
-		descrs["descr"] = "descr:操作权限描述"
-		descrs["api"] = "api:操作权限URL"
-		descrs["action"] = "action:操作权限类型"
-		descrs["params"] = "params:操作权限URL所需参数模板"
+		descrs["id"] = "id:操作ID"
+		descrs["name"] = "name:操作名称"
+		descrs["descr"] = "descr:操作描述"
+		descrs["api"] = "api:操作URL"
+		descrs["action"] = "action:操作类型"
+		descrs["params"] = "params:操作URL所需参数模板"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -182,14 +182,14 @@ func init() {
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
-		descrStr := `查询满足条件的用户账户可用的操作权限信息
-参数解析:
+		descrStr := `查询满足条件的用户账户可用的操作信息
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
 		}
 		policys = append(policys, &policy.Policy{
-			Name:   "操作权限查询",
+			Name:   "操作查询",
 			Descr:  descrStr,
 			API:    "/policy-get",
 			Action: action,
@@ -225,7 +225,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
 		descrStr := `查询满足条件的用户账号及账号的可用状态信息
-参数解析:
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
@@ -270,7 +270,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
 		descrStr := `查询满足条件的操作记录信息
-参数解析:
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
@@ -317,7 +317,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
 		descrStr := `查询满足条件的用户账户
-参数解析:
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
@@ -338,6 +338,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
 		descrStr = `新增用户账户
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
@@ -356,6 +357,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
 		descrStr = `修改用户账户信息
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
@@ -396,7 +398,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
 		descrStr := `查询满足条件的用户账号
-参数解析:
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
@@ -416,7 +418,7 @@ func init() {
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
 		descrStr = `新建用户账号
-参数解析:
+所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
