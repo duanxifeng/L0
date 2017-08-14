@@ -1,0 +1,7 @@
+.form-control{
+    width:90%;
+}
+
+.content-panel > div > div > ul > li {
+    min-height: 458px;
+}

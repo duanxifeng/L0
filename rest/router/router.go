@@ -1,7 +1,9 @@
 package router
 
 import (
-	"gopkg.in/gin-gonic/gin.v1"
+	"net/http"
+
+	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
 var router *gin.Engine
@@ -10,6 +12,13 @@ func init() {
 	//gin.SetMode(gin.ReleaseMode)
 	gin.SetMode(gin.DebugMode)
 	router = gin.Default()
+	router.Static("/js", "./public/js")
+	router.Static("/css", "./public/css")
+	router.Static("/assets", "./public/assets")
+	router.LoadHTMLGlob("public/*.html")
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
 }
 
 //Run start routers

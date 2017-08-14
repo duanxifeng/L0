@@ -1,0 +1,92 @@
+.span6 {
+    width: 150px;
+}
+
+[class*="span"] {
+    float: left;
+    min-height: 1px;
+    margin-left: 30px;
+}
+
+.well {
+    padding: 1px;
+    margin-bottom: 2px;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.container-fluid:before, .container-fluid:after {
+    display: table;
+    content: "";
+    line-height: 0;
+}
+
+.container-fluid:after {
+    clear: both;
+}
+
+.container-fluid:before, .container-fluid:after {
+    display: table;
+    content: "";
+    line-height: 0;
+}
+
+.row-fluid {
+    width: 100%;
+}
+
+.row-fluid:before, .row-fluid:after {
+    display: table;
+    content: "";
+    line-height: 0;
+}
+
+.row-fluid:after {
+    clear: both;
+}
+
+.row-fluid [class*="span"]:first-child {
+    margin-left: 0;
+}
+
+.row-fluid .span2 {
+    width: 14.52991452991453%;
+}
+
+.row-fluid [class*="span"] {
+    display: block;
+    min-height: 30px;
+    box-sizing: border-box;
+    float: left;
+}
+
+.img-circle {
+    border-radius: 500px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+    border: 0;
+}
+
+.row-fluid .span8 {
+    width: 65.81196581196582%;
+}
+
+.row-fluid [class*="span"] {
+    display: block;
+    min-height: 30px;
+    box-sizing: border-box;
+    float: left;
+    margin-left: 2.564102564102564%;
+}
+
+.apppanel {
+    display: flex;
+    height: 100%;
+}
