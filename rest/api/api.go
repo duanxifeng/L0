@@ -263,6 +263,24 @@ func Run(addr ...string) {
 			Params: account.DeleteParams(),
 		})
 		handlers = append(handlers, accountCtrl.Delete)
+
+		policys = append(policys, &policy.Policy{
+			Name:   "account-export",
+			Descr:  account.DeleteDescr(),
+			API:    "/account-export",
+			Action: account.TableName(),
+			Params: account.DeleteParams(),
+		})
+		handlers = append(handlers, accountCtrl.Export)
+
+		policys = append(policys, &policy.Policy{
+			Name:   "account-import",
+			Descr:  account.DeleteDescr(),
+			API:    "/account-import",
+			Action: account.TableName(),
+			Params: account.DeleteParams(),
+		})
+		handlers = append(handlers, accountCtrl.Import)
 	}
 
 	for _, status := range statuses {

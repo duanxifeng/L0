@@ -117,7 +117,7 @@ func (policy *Policy) Condition() (condition string) {
 		if condition != "" {
 			condition += " and "
 		}
-		condition += fmt.Sprintf(" params='%s' ", policy.Action)
+		condition += fmt.Sprintf(" params='%s' ", policy.Params)
 	}
 	return
 }
@@ -134,7 +134,7 @@ func (policy *Policy) validate(tx *sql.Tx) error {
 		return fmt.Errorf("api is empty")
 	}
 	if policy.Action == "" {
-		return fmt.Errorf("api is empty")
+		return fmt.Errorf("action is empty")
 	}
 	return nil
 }

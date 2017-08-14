@@ -121,6 +121,9 @@ func (account *Account) validate(tx *sql.Tx) error {
 	if _, err := account.User(tx); err != nil {
 		return fmt.Errorf("user_id %d is not exist", account.UserID)
 	}
+	if _, err := account.Status(tx); err != nil {
+		return fmt.Errorf("status_id %d is not exist", account.UserID)
+	}
 	return nil
 }
 
