@@ -2,7 +2,6 @@ package account
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -25,56 +24,6 @@ type Account struct {
 	Updated  time.Time `json:"updated"`
 	user     *user.User
 	status   *status.Status
-}
-
-func (account *Account) GetDescr() string {
-	return fmt.Sprintf(` list %s `, account.TableName())
-}
-func (account *Account) GetParams() string {
-	bytes, _ := json.Marshal(account)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (account *Account) PostDescr() string {
-	return fmt.Sprintf(` add %s `, account.TableName())
-}
-func (account *Account) PostParams() string {
-	bytes, _ := json.Marshal(account)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "id")
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (account *Account) PutDescr() string {
-	return fmt.Sprintf(` modify %s `, account.TableName())
-}
-func (account *Account) PutParams() string {
-	bytes, _ := json.Marshal(account)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (account *Account) DeleteDescr() string {
-	return fmt.Sprintf(` delete %s `, account.TableName())
-}
-func (account *Account) DeleteParams() string {
-	bytes, _ := json.Marshal(account)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
 }
 
 //Condition

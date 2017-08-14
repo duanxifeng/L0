@@ -2,7 +2,6 @@ package policy
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	"time"
@@ -24,56 +23,6 @@ type Policy struct {
 	Params  string    `json:"params"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
-}
-
-func (policy *Policy) GetDescr() string {
-	return fmt.Sprintf(` list %s `, policy.TableName())
-}
-func (policy *Policy) GetParams() string {
-	bytes, _ := json.Marshal(policy)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (policy *Policy) PostDescr() string {
-	return fmt.Sprintf(` add %s `, policy.TableName())
-}
-func (policy *Policy) PostParams() string {
-	bytes, _ := json.Marshal(policy)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "id")
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (policy *Policy) PutDescr() string {
-	return fmt.Sprintf(` modify %s `, policy.TableName())
-}
-func (policy *Policy) PutParams() string {
-	bytes, _ := json.Marshal(policy)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (policy *Policy) DeleteDescr() string {
-	return fmt.Sprintf(` delete %s `, policy.TableName())
-}
-func (policy *Policy) DeleteParams() string {
-	bytes, _ := json.Marshal(policy)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
 }
 
 //Condition

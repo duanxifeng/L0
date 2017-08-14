@@ -7,6 +7,8 @@ import (
 
 	gin "gopkg.in/gin-gonic/gin.v1"
 
+	"fmt"
+
 	"github.com/bocheninc/L0/rest/controllers"
 	"github.com/bocheninc/L0/rest/model"
 	"github.com/bocheninc/L0/rest/model/table/account"
@@ -17,272 +19,19 @@ import (
 	"github.com/bocheninc/L0/rest/router"
 )
 
+//init user table data
+var users = make([]*user.User, 0)
+
+//init status table data
+var statuses = make([]*status.Status, 0)
+
+//init policy table data
+var policys = make([]*policy.Policy, 0)
+var handlers = make([]func(c *gin.Context), 0)
+
 //Run start api service
 func Run(addr ...string) {
-	users := make([]*user.User, 0)
-	users = append(users, &user.User{
-		Name:     "admin",
-		PassWord: "admin",
-	})
-
-	//init status table data
-	statuses := make([]*status.Status, 0)
-	statuses = append(statuses, &status.Status{
-		Name:    "in",
-		Descr:   "pend",
-		Created: time.Now(),
-		Updated: time.Now(),
-	})
-	statuses = append(statuses, &status.Status{
-		Name:    "on",
-		Descr:   "normal",
-		Created: time.Now(),
-		Updated: time.Now(),
-	})
-	statuses = append(statuses, &status.Status{
-		Name:    "off",
-		Descr:   "expired",
-		Created: time.Now(),
-		Updated: time.Now(),
-	})
-
-	//init policy table data
-	policys := make([]*policy.Policy, 0)
-	handlers := make([]func(c *gin.Context), 0)
-
-	//***********************************************************************************
-	//*************************************history***************************************
-	//***********************************************************************************
-	{
-		history := history.NewHistory()
-		historyCtrl := controllers.NewHistoryController()
-		policys = append(policys, &policy.Policy{
-			Name:   "history-get",
-			Descr:  history.GetDescr(),
-			API:    "/history-get",
-			Action: history.TableName(),
-			Params: history.GetParams(),
-		})
-		handlers = append(handlers, historyCtrl.Get)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "history-post",
-			Descr:  history.PostDescr(),
-			API:    "/history-post",
-			Action: history.TableName(),
-			Params: history.PostParams(),
-		})
-		handlers = append(handlers, historyCtrl.Post)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "history-put",
-			Descr:  history.PutDescr(),
-			API:    "/history-put",
-			Action: history.TableName(),
-			Params: history.PutParams(),
-		})
-		handlers = append(handlers, historyCtrl.Put)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "history-delete",
-			Descr:  history.DeleteDescr(),
-			API:    "/history-delete",
-			Action: history.TableName(),
-			Params: history.DeleteParams(),
-		})
-		handlers = append(handlers, historyCtrl.Delete)
-	}
-
-	//***********************************************************************************
-	//*************************************status******************************************
-	//***********************************************************************************
-	{
-		status := status.NewStatus()
-		statusCtrl := controllers.NewStatusController()
-		policys = append(policys, &policy.Policy{
-			Name:   "status-get",
-			Descr:  status.GetDescr(),
-			API:    "/status-get",
-			Action: status.TableName(),
-			Params: status.GetParams(),
-		})
-		handlers = append(handlers, statusCtrl.Get)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "status-post",
-			Descr:  status.PostDescr(),
-			API:    "/status-post",
-			Action: status.TableName(),
-			Params: status.PostParams(),
-		})
-		handlers = append(handlers, statusCtrl.Post)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "status-put",
-			Descr:  status.PutDescr(),
-			API:    "/status-put",
-			Action: status.TableName(),
-			Params: status.PutParams(),
-		})
-		handlers = append(handlers, statusCtrl.Put)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "status-delete",
-			Descr:  status.DeleteDescr(),
-			API:    "/status-delete",
-			Action: status.TableName(),
-			Params: status.DeleteParams(),
-		})
-		handlers = append(handlers, statusCtrl.Delete)
-	}
-
-	//***********************************************************************************
-	//*************************************policy******************************************
-	//***********************************************************************************
-	{
-		opolicy := policy.NewPolicy()
-		policyCtrl := controllers.NewPolicyController()
-		policys = append(policys, &policy.Policy{
-			Name:   "policy-get",
-			Descr:  opolicy.GetDescr(),
-			API:    "/policy-get",
-			Action: opolicy.TableName(),
-			Params: opolicy.GetParams(),
-		})
-		handlers = append(handlers, policyCtrl.Get)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "policy-post",
-			Descr:  opolicy.PostDescr(),
-			API:    "/policy-post",
-			Action: opolicy.TableName(),
-			Params: opolicy.PostParams(),
-		})
-		handlers = append(handlers, policyCtrl.Post)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "policy-put",
-			Descr:  opolicy.PutDescr(),
-			API:    "/policy-put",
-			Action: opolicy.TableName(),
-			Params: opolicy.PutParams(),
-		})
-		handlers = append(handlers, policyCtrl.Put)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "policy-delete",
-			Descr:  opolicy.DeleteDescr(),
-			API:    "/policy-delete",
-			Action: opolicy.TableName(),
-			Params: opolicy.DeleteParams(),
-		})
-		handlers = append(handlers, policyCtrl.Delete)
-	}
-
-	//***********************************************************************************
-	//*************************************user******************************************
-	//***********************************************************************************
-	{
-		user := user.NewUser()
-		userCtrl := controllers.NewUserController()
-		policys = append(policys, &policy.Policy{
-			Name:   "user-get",
-			Descr:  user.GetDescr(),
-			API:    "/user-get",
-			Action: user.TableName(),
-			Params: user.GetParams(),
-		})
-		handlers = append(handlers, userCtrl.Get)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "user-post",
-			Descr:  user.PostDescr(),
-			API:    "/user-post",
-			Action: user.TableName(),
-			Params: user.PostParams(),
-		})
-		handlers = append(handlers, userCtrl.Post)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "user-put",
-			Descr:  user.PutDescr(),
-			API:    "/user-put",
-			Action: user.TableName(),
-			Params: user.PutParams(),
-		})
-		handlers = append(handlers, userCtrl.Put)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "user-delete",
-			Descr:  user.DeleteDescr(),
-			API:    "/user-delete",
-			Action: user.TableName(),
-			Params: user.DeleteParams(),
-		})
-		handlers = append(handlers, userCtrl.Delete)
-	}
-
-	//***********************************************************************************
-	//*************************************account***************************************
-	//***********************************************************************************
-	{
-		account := account.NewAccount()
-		accountCtrl := controllers.NewAccountController()
-		policys = append(policys, &policy.Policy{
-			Name:   "account-get",
-			Descr:  account.GetDescr(),
-			API:    "/account-get",
-			Action: account.TableName(),
-			Params: account.GetParams(),
-		})
-		handlers = append(handlers, accountCtrl.Get)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "account-post",
-			Descr:  account.PostDescr(),
-			API:    "/account-post",
-			Action: account.TableName(),
-			Params: account.PostParams(),
-		})
-		handlers = append(handlers, accountCtrl.Post)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "account-put",
-			Descr:  account.PutDescr(),
-			API:    "/account-put",
-			Action: account.TableName(),
-			Params: account.PutParams(),
-		})
-		handlers = append(handlers, accountCtrl.Put)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "account-delete",
-			Descr:  account.DeleteDescr(),
-			API:    "/account-delete",
-			Action: account.TableName(),
-			Params: account.DeleteParams(),
-		})
-		handlers = append(handlers, accountCtrl.Delete)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "account-export",
-			Descr:  account.DeleteDescr(),
-			API:    "/account-export",
-			Action: account.TableName(),
-			Params: account.DeleteParams(),
-		})
-		handlers = append(handlers, accountCtrl.Export)
-
-		policys = append(policys, &policy.Policy{
-			Name:   "account-import",
-			Descr:  account.DeleteDescr(),
-			API:    "/account-import",
-			Action: account.TableName(),
-			Params: account.DeleteParams(),
-		})
-		handlers = append(handlers, accountCtrl.Import)
-	}
-
+	// create table data
 	for _, status := range statuses {
 		res, err := status.Query(model.DB, "")
 		if err != nil {
@@ -315,17 +64,10 @@ func Run(addr ...string) {
 		tx.Commit()
 	}
 
-	tstatus := &status.Status{
-		Name: "on",
-	}
-	res, err := tstatus.Query(model.DB, "")
-	if err != nil {
-		panic(err)
-	}
-	statusID := res[0].(*status.Status).ID
+	var statusID int64 = 1
 
 	tpolicy := &policy.Policy{}
-	res, err = tpolicy.Query(model.DB, "")
+	res, err := tpolicy.Query(model.DB, "")
 	if err != nil {
 		panic(err)
 	}
@@ -352,6 +94,7 @@ func Run(addr ...string) {
 		tx.Commit()
 	}
 
+	// router register
 	for index, opolicy := range policys {
 		function := handlers[index]
 		var params map[string]string
@@ -372,20 +115,319 @@ func Run(addr ...string) {
 					Created: time.Now(),
 					Updated: time.Now(),
 				}
-				addHistory(history)
+				tx, _ := model.DB.Begin()
+				if err := history.Insert(tx); err != nil {
+					tx.Rollback()
+				} else {
+					tx.Commit()
+				}
 			}
-
 			function(c)
 		})
 	}
+
 	router.Run(addr...)
 }
 
-func addHistory(history *history.History) {
-	tx, _ := model.DB.Begin()
-	if err := history.Insert(tx); err != nil {
-		tx.Rollback()
-	} else {
-		tx.Commit()
+func init() {
+	users = append(users, &user.User{
+		Name:     "admin",
+		PassWord: "admin",
+	})
+
+	statuses = append(statuses, &status.Status{
+		Name:  "待审批",
+		Descr: "等待审批中...",
+	})
+	statuses = append(statuses, &status.Status{
+		Name:  "通过",
+		Descr: "已通过审核",
+	})
+	statuses = append(statuses, &status.Status{
+		Name:  "失败",
+		Descr: "未通过审核",
+	})
+
+	//***********************************************************************************
+	//全局信息 --- 权限
+	//***********************************************************************************
+	{
+		action := "全局信息"
+		opolicy := &policy.Policy{
+		// ID         int64         `json:"id"`
+		// Name       string        `json:"name"`
+		// Descr      string        `json:"descr"`
+		// API        string        `json:"api"`
+		// Action     string        `json:"action"`
+		// Params     string        `json:"params"`
+		// Created    time.Time     `json:"created"`
+		// Updated    time.Time     `json:"updated"`
+		}
+		bytes, _ := json.Marshal(opolicy)
+		policyCtrl := controllers.NewPolicyController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:操作权限ID"
+		descrs["name"] = "name:操作权限名称"
+		descrs["descr"] = "descr:操作权限描述"
+		descrs["api"] = "api:操作权限URL"
+		descrs["action"] = "action:操作权限类型"
+		descrs["params"] = "params:操作权限URL所需参数模板"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "descr")
+		delete(params, "api")
+		delete(params, "params")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询满足条件的用户账户可用的操作权限信息
+参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "操作权限查询",
+			Descr:  descrStr,
+			API:    "/policy-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, policyCtrl.Get)
+	}
+
+	//***********************************************************************************
+	//全局信息 --- 用户账户及账号的状态
+	//***********************************************************************************
+	{
+		action := "全局信息"
+		status := &status.Status{
+		// ID    int64        `json:"id"`
+		// Name    string        `json:"name"`
+		// Descr    string        `json:"descr"`
+		// Created    time.Time    `json:"created"`
+		// Updated    time.Time    `json:"updated"`
+		}
+		bytes, _ := json.Marshal(status)
+		statusCtrl := controllers.NewStatusController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:状态ID"
+		descrs["name"] = "name:状态名称"
+		descrs["descr"] = "descr:状态描述"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "descr")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询满足条件的用户账号及账号的可用状态信息
+参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+
+		policys = append(policys, &policy.Policy{
+			Name:   "状态查询",
+			Descr:  descrStr,
+			API:    "/status-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, statusCtrl.Get)
+	}
+
+	//***********************************************************************************
+	//全局信息 --- 操作记录
+	//***********************************************************************************
+	{
+		action := "全局信息"
+		history := &history.History{
+		// ID    int64        `json:"id"`
+		// API    string        `json:"api"`
+		// Action    string        `json:"action"`
+		// Params    string        `json:"params"`
+		// Created    time.Time    `json:"created"`
+		// Updated    time.Time    `json:"updated"`
+		}
+		historyCtrl := controllers.NewHistoryController()
+		bytes, _ := json.Marshal(history)
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:操作记录ID"
+		descrs["api"] = "name:操作api"
+		descrs["action"] = "name:操作类型"
+		descrs["params"] = "params:操作参数"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "params")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询满足条件的操作记录信息
+参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "操作记录查询",
+			Descr:  descrStr,
+			API:    "/history-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, historyCtrl.Get)
+	}
+
+	//***********************************************************************************
+	//数据处理基本功能 --- 用户账户
+	//***********************************************************************************
+	{
+		action := "数据处理基本功能"
+		user := &user.User{
+		// ID          int64        `json:"id"`
+		// Name        string       `json:"name"`
+		// PassWord    string       `json:"password"`
+		// Metadata    string       `json:"metadata"`
+		// PolicyID    int64        `json:"policy_id"`
+		// StatusID    int64        `json:"status_id"`
+		// Created     time.Time    `json:"created"`
+		// Updated     time.Time    `json:"updated"`
+		}
+		bytes, _ := json.Marshal(user)
+		userCtrl := controllers.NewUserController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:用户账户ID"
+		descrs["name"] = "name:用户账户名称"
+		descrs["password"] = "password:用户账户密码"
+		descrs["metadata"] = "metadata:用户账户附加信息"
+		descrs["policy_id"] = "policy_id:用户账户权限ID"
+		descrs["status_id"] = "status_id:用户账户状态ID"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询满足条件的用户账户
+参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账户查询",
+			Descr:  descrStr,
+			API:    "/user-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, userCtrl.Get)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "updated")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `新增用户账户
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账户创建",
+			Descr:  descrStr,
+			API:    "/user-post",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, userCtrl.Post)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `修改用户账户信息
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账户修改",
+			Descr:  descrStr,
+			API:    "/user-put",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, userCtrl.Put)
+	}
+
+	//***********************************************************************************
+	//数据处理基本功能 --- 账号
+	//***********************************************************************************
+	{
+		action := "数据处理基本功能"
+		account := &account.Account{
+		// ID        int64        `json:"id"`
+		// Address   string        `json:"addr"`
+		// UserID    int64        `json:"user_id"`
+		// StatusID  int64        `json:"status_id"`
+		}
+		bytes, _ := json.Marshal(account)
+		accountCtrl := controllers.NewAccountController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:用户账号ID"
+		descrs["addr"] = "addr:用户账号地址"
+		descrs["user_id"] = "user_id:用户账号所属用户账户ID"
+		descrs["status_id"] = "status_id:用户账号的状态ID"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询满足条件的用户账号
+参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账号查询",
+			Descr:  descrStr,
+			API:    "/account-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, accountCtrl.Get)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `新建用户账号
+参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账号新建",
+			Descr:  descrStr,
+			API:    "/account-post",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, accountCtrl.Post)
 	}
 }

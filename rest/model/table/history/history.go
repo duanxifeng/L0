@@ -2,7 +2,6 @@ package history
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -21,56 +20,6 @@ type History struct {
 	Params  string    `json:"params"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
-}
-
-func (history *History) GetDescr() string {
-	return fmt.Sprintf(` list %s `, history.TableName())
-}
-func (history *History) GetParams() string {
-	bytes, _ := json.Marshal(history)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (history *History) PostDescr() string {
-	return fmt.Sprintf(` add %s `, history.TableName())
-}
-func (history *History) PostParams() string {
-	bytes, _ := json.Marshal(history)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "id")
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (history *History) PutDescr() string {
-	return fmt.Sprintf(` modify %s `, history.TableName())
-}
-func (history *History) PutParams() string {
-	bytes, _ := json.Marshal(history)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
-}
-func (history *History) DeleteDescr() string {
-	return fmt.Sprintf(` delete %s `, history.TableName())
-}
-func (history *History) DeleteParams() string {
-	bytes, _ := json.Marshal(history)
-	var params map[string]interface{}
-	json.Unmarshal(bytes, &params)
-	delete(params, "created")
-	delete(params, "updated")
-	bytes, _ = json.Marshal(params)
-	return string(bytes)
 }
 
 //Condition
