@@ -140,16 +140,20 @@ func init() {
 		Descr: "等待审批中...",
 	})
 	statuses = append(statuses, &status.Status{
+		Name:  "失败",
+		Descr: "未通过审核",
+	})
+	statuses = append(statuses, &status.Status{
 		Name:  "通过",
 		Descr: "已通过审核",
 	})
 	statuses = append(statuses, &status.Status{
-		Name:  "失败",
-		Descr: "未通过审核",
+		Name:  "注销",
+		Descr: "已销户,不可用",
 	})
 
 	//***********************************************************************************
-	//全局信息 --- 权限
+	//全局信息 --- 可操作权限
 	//***********************************************************************************
 	{
 		action := "全局信息"
@@ -172,7 +176,7 @@ func init() {
 		descrs["descr"] = "descr:操作描述"
 		descrs["api"] = "api:操作URL"
 		descrs["action"] = "action:操作类型"
-		descrs["params"] = "params:操作URL所需参数模板"
+		descrs["params"] = "params:操作URL所需参数的模板"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -316,7 +320,7 @@ func init() {
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
-		descrStr := `查询满足条件的用户账户
+		descrStr := `查询满足条件的用户账户信息
 所需参数解析:
 `
 		for k := range params {
@@ -337,7 +341,7 @@ func init() {
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
-		descrStr = `新增用户账户
+		descrStr = `创建用户账户
 所需参数解析:
 `
 		for k := range params {
@@ -353,6 +357,8 @@ func init() {
 		handlers = append(handlers, userCtrl.Post)
 
 		json.Unmarshal(bytes, &params)
+		delete(params, "policy_id")
+		delete(params, "status_id")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
@@ -366,6 +372,30 @@ func init() {
 			Name:   "用户账户修改",
 			Descr:  descrStr,
 			API:    "/user-put",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, userCtrl.Put)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "name")
+		delete(params, "password")
+		delete(params, "metadata")
+		delete(params, "policy_id")
+		delete(params, "status_id")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `注销用户账户
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账户注销",
+			Descr:  descrStr,
+			API:    "/user-close",
 			Action: action,
 			Params: string(paramsBytes),
 		})
@@ -397,7 +427,7 @@ func init() {
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
-		descrStr := `查询满足条件的用户账号
+		descrStr := `查询满足条件的用户账号信息
 所需参数解析:
 `
 		for k := range params {
@@ -417,16 +447,74 @@ func init() {
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
-		descrStr = `新建用户账号
+		descrStr = `创建用户账号
 所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
 		}
 		policys = append(policys, &policy.Policy{
-			Name:   "用户账号新建",
+			Name:   "用户账号创建",
 			Descr:  descrStr,
 			API:    "/account-post",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, accountCtrl.Post)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `审批用户账号
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账号审批",
+			Descr:  descrStr,
+			API:    "/account-put",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, accountCtrl.Put)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `导出用户账号
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账号导出",
+			Descr:  descrStr,
+			API:    "/account-export",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, accountCtrl.Post)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `导入用户账号
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账号导入",
+			Descr:  descrStr,
+			API:    "/account-import",
 			Action: action,
 			Params: string(paramsBytes),
 		})
