@@ -67,9 +67,11 @@ func (account *Account) validate(tx *sql.Tx) error {
 	if account.Address == "" {
 		return fmt.Errorf("addr is empty")
 	}
-	// if _, err := account.User(tx); err != nil {
-	// 	return fmt.Errorf("user_id %d is not exist", account.UserID)
-	// }
+	if account.UserID != 0 {
+		if _, err := account.User(tx); err != nil {
+			return fmt.Errorf("user_id %d is not exist", account.UserID)
+		}
+	}
 	if _, err := account.Status(tx); err != nil {
 		return fmt.Errorf("status_id %d is not exist", account.StatusID)
 	}
@@ -132,6 +134,7 @@ func (account *Account) Insert(tx *sql.Tx) error {
 	if err := account.validate(tx); err != nil {
 		return err
 	}
+	//exist
 	account.Created = time.Now()
 	account.Updated = account.Created
 	res, err := tx.Exec(fmt.Sprintf("insert into %s(addr, user_id, status_id, created, updated) values(?, ?, ?, ?, ?)", account.TableName()),

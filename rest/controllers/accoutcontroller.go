@@ -118,7 +118,7 @@ func (accountCtrl *AccountController) Delete(c *gin.Context) {
 }
 
 type ExportAccount struct {
-	Addr string `json:"addr"`
+	Address string `json:"addr"`
 }
 
 func (accountCtrl *AccountController) Export(c *gin.Context) {
@@ -141,7 +141,7 @@ func (accountCtrl *AccountController) Export(c *gin.Context) {
 	objs := make([]*ExportAccount, 0)
 	for _, taccount := range accounts {
 		objs = append(objs, &ExportAccount{
-			Addr: taccount.(*account.Account).Address,
+			Address: taccount.(*account.Account).Address,
 		})
 	}
 

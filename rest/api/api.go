@@ -15,6 +15,7 @@ import (
 	"github.com/bocheninc/L0/rest/model/table/history"
 	"github.com/bocheninc/L0/rest/model/table/policy"
 	"github.com/bocheninc/L0/rest/model/table/status"
+	"github.com/bocheninc/L0/rest/model/table/transaction"
 	"github.com/bocheninc/L0/rest/model/table/user"
 	"github.com/bocheninc/L0/rest/router"
 )
@@ -64,7 +65,6 @@ func Run(addr ...string) {
 		tx.Commit()
 	}
 
-	statusID := int64(1)
 	policyID := int64(0)
 	tpolicy := &policy.Policy{}
 	res, err := tpolicy.Query(model.DB, "")
@@ -75,7 +75,6 @@ func Run(addr ...string) {
 		policyID = r.(*policy.Policy).ID | policyID
 	}
 	for _, user := range users {
-		user.StatusID = statusID
 		user.PolicyID = policyID
 		res, err := user.Query(model.DB, "")
 		if err != nil {
@@ -137,6 +136,8 @@ func init() {
 	users = append(users, &user.User{
 		Name:     "admin",
 		PassWord: "admin",
+		//Metadata: ""
+		StatusID: 3, //已通过审核
 	})
 
 	statuses = append(statuses, &status.Status{
@@ -180,7 +181,9 @@ func init() {
 		descrs["descr"] = "descr:操作描述"
 		descrs["api"] = "api:操作URL"
 		descrs["action"] = "action:操作类型"
-		descrs["params"] = "params:操作URL所需参数的模板"
+		descrs["params"] = "params:操作URL所需参数"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -225,6 +228,8 @@ func init() {
 		descrs["id"] = "id:状态ID"
 		descrs["name"] = "name:状态名称"
 		descrs["descr"] = "descr:状态描述"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -272,6 +277,8 @@ func init() {
 		descrs["api"] = "api:操作api"
 		descrs["action"] = "action:操作类型"
 		descrs["params"] = "params:操作参数"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -321,6 +328,8 @@ func init() {
 		descrs["metadata"] = "metadata:用户账户附加信息"
 		descrs["policy_id"] = "policy_id:用户账户权限ID"
 		descrs["status_id"] = "status_id:用户账户状态ID"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -348,6 +357,7 @@ func init() {
 		delete(params, "id")
 		delete(params, "updated")
 		delete(params, "created")
+		params["policy_id"] = 0
 		params["status_id"] = 1
 		paramsBytes, _ = json.Marshal(params)
 		descrStr = `创建用户账户
@@ -417,6 +427,7 @@ func init() {
 		account := &account.Account{
 		// ID        int64        `json:"id"`
 		// Address   string        `json:"addr"`
+		// PassWord  string       `json:"password"`
 		// UserID    int64        `json:"user_id"`
 		// StatusID  int64        `json:"status_id"`
 		}
@@ -428,6 +439,8 @@ func init() {
 		descrs["addr"] = "addr:用户账号地址"
 		descrs["user_id"] = "user_id:用户账号所属用户账户ID"
 		descrs["status_id"] = "status_id:用户账号的状态ID"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
@@ -451,6 +464,7 @@ func init() {
 
 		json.Unmarshal(bytes, &params)
 		delete(params, "id")
+		delete(params, "user_id")
 		delete(params, "created")
 		delete(params, "updated")
 		params["status_id"] = 1
@@ -476,14 +490,14 @@ func init() {
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
-		descrStr = `用户账号和用户账户映射
+		descrStr = `用户账号映射用户账户
 所需参数解析:
 `
 		for k := range params {
 			descrStr += fmt.Sprintln(descrs[k])
 		}
 		policys = append(policys, &policy.Policy{
-			Name:   "用户账号和用户账户映射",
+			Name:   "用户账号映射用户账户",
 			Descr:  descrStr,
 			API:    "/account-put",
 			Action: action,
@@ -529,13 +543,16 @@ func init() {
 			Action: action,
 			Params: string(paramsBytes),
 		})
-		handlers = append(handlers, accountCtrl.Post)
+		handlers = append(handlers, accountCtrl.Export)
 
 		json.Unmarshal(bytes, &params)
 		delete(params, "id")
+		delete(params, "user_id")
+		delete(params, "status_id")
 		delete(params, "created")
 		delete(params, "updated")
-		paramsBytes, _ = json.Marshal(params)
+		var p []map[string]interface{}
+		paramsBytes, _ = json.Marshal(append(p, params))
 		descrStr = `导入用户账号
 所需参数解析:
 `
@@ -549,6 +566,119 @@ func init() {
 			Action: action,
 			Params: string(paramsBytes),
 		})
-		handlers = append(handlers, accountCtrl.Post)
+		handlers = append(handlers, accountCtrl.Import)
+	}
+
+	//***********************************************************************************
+	//数据处理基本功能 --- 转账
+	//***********************************************************************************
+	{
+		action := "数据处理基本功能"
+		transaction := &transaction.Transaction{
+		// ID        int64        `json:"id"`
+		// FromChain    string        `json:"from_chain"`
+		// ToChain        string        `json:"to_chain"`
+		// Type        int64        `json:"tx_type"`
+		// Nonce        int64        `json:"tx_nonce"`
+		// Sender        string        `json:"sender"`
+		// Receiver    string        `json:"receiver"`
+		// Amount        uint64        `json:"amount"`
+		// Fee        uint64        `json:"fee"`
+		// Signature    string        `json:"signature"`
+		// Created        time.Time    `json:"created"`
+		// Payload        string        `json:"payload"`
+		// Hash        string        `json:"hash"`
+		// Height        uint64        `json:"height"`
+		}
+		bytes, _ := json.Marshal(transaction)
+		transactionCtrl := controllers.NewTransactionController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:交易ID"
+		descrs["from_chain"] = "from_chain:交易来源Chain"
+		descrs["to_chain"] = "to_chain:交易目的Chain"
+		descrs["tx_type"] = "tx_type:交易类型"
+		descrs["tx_nonce"] = "tx_nonce:交易Nonce"
+		descrs["sender"] = "sender:交易发送方,如果多个,以逗号区分"
+		descrs["receiver"] = "receiver:交易接收方,如果多个,以逗号区分"
+		descrs["amount"] = "amount:交易金额"
+		descrs["fee"] = "fee:更新手续费"
+		descrs["signature"] = "signature:交易签名"
+		descrs["created"] = "created:交易时间"
+		descrs["payload"] = "payload:交易附加信息"
+		descrs["hash"] = "hash:交易哈希值"
+		descrs["height"] = "height:交易区块高度"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "tx_nonce")
+		delete(params, "amount")
+		delete(params, "fee")
+		delete(params, "signature")
+		delete(params, "created")
+		delete(params, "payload")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询满足条件的交易信息
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "交易查询",
+			Descr:  descrStr,
+			API:    "/transaction-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, transactionCtrl.Get)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "tx_nonce")
+		delete(params, "created")
+		delete(params, "hash")
+		delete(params, "height")
+		params["tx_type"] = 0
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `一对一转账
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "一对一转账",
+			Descr:  descrStr,
+			API:    "/transaction-single",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, transactionCtrl.Post)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "tx_nonce")
+		delete(params, "payload")
+		delete(params, "created")
+		delete(params, "hash")
+		delete(params, "height")
+		params["tx_type"] = 0
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `一对多转账
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "一对多转账",
+			Descr:  descrStr,
+			API:    "/transaction-multiple",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, transactionCtrl.Post)
+
 	}
 }

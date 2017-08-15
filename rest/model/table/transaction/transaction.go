@@ -15,7 +15,6 @@ func init() {
 
 type Transaction struct {
 	ID        int64     `json:"id"`
-	Hash      string    `json:"hash"`
 	FromChain string    `json:"from_chain"`
 	ToChain   string    `json:"to_chain"`
 	Type      int64     `json:"tx_type"`
@@ -24,7 +23,11 @@ type Transaction struct {
 	Receiver  string    `json:"receiver"`
 	Amount    uint64    `json:"amount"`
 	Fee       uint64    `json:"fee"`
+	Signature string    `json:"signature"`
 	Created   time.Time `json:"created"`
+	Payload   string    `json:"payload"`
+	Hash      string    `json:"hash"`
+	Height    uint64    `json:"height"`
 }
 
 //Condition
@@ -34,6 +37,48 @@ func (transcation *Transaction) Condition() (condition string) {
 			condition += " and "
 		}
 		condition += fmt.Sprintf(" id='%d' ", transcation.ID)
+	}
+
+	if transcation.FromChain != "" {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" from_chain='%s' ", transcation.FromChain)
+	}
+
+	if transcation.ToChain != "" {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" to_chain='%s' ", transcation.ToChain)
+	}
+
+	if transcation.Type != 0 {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" type='%d' ", transcation.Type)
+	}
+
+	if transcation.Sender != "" {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" sender='%s' ", transcation.Sender)
+	}
+
+	if transcation.Receiver != "" {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" receiver='%s' ", transcation.Receiver)
+	}
+
+	if transcation.Height != 0 {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" height='%d' ", transcation.Height)
 	}
 	return
 }
@@ -48,16 +93,19 @@ func (transcation *Transaction) CreateIfNotExist(db *sql.DB) (string, error) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL AUTO_INCREMENT,
-	hash CHAR(255) NOT NULL UNIQUE,
-	from_chain CHAR(255) NOT NULL,
-	to_chain CHAR(255) NOT NULL,
+	from_chain VARCHAR(255) NOT NULL,
+	to_chain VARCHAR(255) NOT NULL,
 	tx_type int NOT NULL,
 	tx_nonce int NOT NULL,
-	sender CHAR(255) NOT NULL,
-	receiver CHAR(255) NOT NULL,
+	sender VARCHAR(255) NOT NULL,
+	receiver VARCHAR(255) NOT NULL,
 	amount INT NOT NULL,
 	fee INT NOT NULL,
+	signature VARCHAR(255) NOT NULL,
 	created DATETIME NOT NULL,
+	payload TEXT NOT NULL,
+	hash VARCHAR(255) NOT NULL UNIQUE,
+	height INT NOT NULL DEFAULT 0,
 	PRIMARY KEY (id)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;`
 	sql = fmt.Sprintf(sql, transcation.TableName())
@@ -67,7 +115,7 @@ func (transcation *Transaction) CreateIfNotExist(db *sql.DB) (string, error) {
 
 //Query
 func (transcation *Transaction) Query(db *sql.DB, condition string) ([]table.ITable, error) {
-	sql := fmt.Sprintf("select id, hash, from_chain, to_chain, tx_type, tx_nonce, sender, receiver, amount, fee, created from %s", transcation.TableName())
+	sql := fmt.Sprintf("select id, from_chain, to_chain, tx_type, tx_nonce, sender, receiver, amount, fee, signature, created, payload, hash, height from %s", transcation.TableName())
 	cond := transcation.Condition() + condition
 	if cond != "" {
 		sql = fmt.Sprintf("%s where %s", sql, cond)
@@ -82,7 +130,7 @@ func (transcation *Transaction) Query(db *sql.DB, condition string) ([]table.ITa
 	res := make([]table.ITable, 0)
 	for rows.Next() {
 		tx := NewTransaction()
-		if err := rows.Scan(&tx.ID, &tx.Hash, &tx.FromChain, &tx.ToChain, &tx.Type, &tx.Nonce, &tx.Sender, &tx.Receiver, &tx.Amount, tx.Fee, &tx.Created); err != nil {
+		if err := rows.Scan(&tx.ID, &tx.FromChain, &tx.ToChain, &tx.Type, &tx.Nonce, &tx.Sender, &tx.Receiver, &tx.Amount, &tx.Fee, &tx.Signature, &tx.Created, &tx.Payload, &tx.Hash, &tx.Height); err != nil {
 			return res, err
 		}
 		res = append(res, tx)
@@ -92,9 +140,10 @@ func (transcation *Transaction) Query(db *sql.DB, condition string) ([]table.ITa
 
 //Insert
 func (transcation *Transaction) Insert(tx *sql.Tx) error {
-	res, err := tx.Exec("insert info ?(hash, from_chain, to_chain, tx_type, tx_nonce, sender, receiver, amount, fee, created) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		transcation.TableName(), transcation.Hash, transcation.FromChain, transcation.ToChain, transcation.Type, transcation.Nonce,
-		transcation.Sender, transcation.Receiver, transcation.Amount, transcation.Fee, transcation.Created)
+	transcation.Created = time.Now()
+	res, err := tx.Exec(fmt.Sprintf("insert into %s(from_chain, to_chain, tx_type, tx_nonce, sender, receiver, amount, fee, signature, created, payload, hash, height) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", transcation.TableName()),
+		transcation.FromChain, transcation.ToChain, transcation.Type, transcation.Nonce,
+		transcation.Sender, transcation.Receiver, transcation.Amount, transcation.Fee, transcation.Signature, transcation.Created, transcation.Payload, transcation.Hash, transcation.Height)
 	if err != nil {
 		return err
 	}
@@ -129,9 +178,9 @@ func (transcation *Transaction) Delete(tx *sql.Tx, condition string) error {
 
 //Update
 func (transcation *Transaction) Update(tx *sql.Tx) error {
-	res, err := tx.Exec(fmt.Sprintf("update %s set hash=?, from_chain=?, to_chain=?, tx_type=?, tx_nonce=?, sender=?, receiver=?, amount=? fee=?, created=? where id=? ", transcation.TableName()),
-		transcation.Hash, transcation.FromChain, transcation.ToChain, transcation.Type, transcation.Nonce,
-		transcation.Sender, transcation.Receiver, transcation.Amount, transcation.Fee, transcation.Created, transcation.ID)
+	res, err := tx.Exec(fmt.Sprintf("update %s set from_chain=?, to_chain=?, tx_type=?, tx_nonce=?, sender=?, receiver=?, amount=?, fee=?, signature=?, created=?, payload=? ,hash=?, height=? where id=? ", transcation.TableName()),
+		transcation.FromChain, transcation.ToChain, transcation.Type, transcation.Nonce,
+		transcation.Sender, transcation.Receiver, transcation.Amount, transcation.Fee, transcation.Signature, transcation.Created, transcation.Payload, transcation.Hash, transcation.Height, transcation.ID)
 	if err != nil {
 		return err
 	}
