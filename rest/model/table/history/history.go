@@ -15,6 +15,7 @@ func init() {
 
 type History struct {
 	ID      int64     `json:"id"`
+	Name    string    `json:"name"`
 	API     string    `json:"api"`
 	Action  string    `json:"action"`
 	Params  string    `json:"params"`
@@ -29,6 +30,13 @@ func (history *History) Condition() (condition string) {
 			condition += " and "
 		}
 		condition += fmt.Sprintf(" id='%d' ", history.ID)
+	}
+
+	if history.Name != "" {
+		if condition != "" {
+			condition += " and "
+		}
+		condition += fmt.Sprintf(" name='%s' ", history.Name)
 	}
 
 	if history.API != "" {
@@ -67,6 +75,7 @@ func (history *History) CreateIfNotExist(db *sql.DB) (string, error) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS %s (
 	id INT NOT NULL AUTO_INCREMENT,
+	name VARCHAR(255) NOT NULL,
 	api VARCHAR(255) NOT NULL,
 	action VARCHAR(255) NOT NULL,
 	params TEXT,
@@ -81,7 +90,7 @@ func (history *History) CreateIfNotExist(db *sql.DB) (string, error) {
 
 //Query
 func (history *History) Query(db *sql.DB, condition string) ([]table.ITable, error) {
-	sql := fmt.Sprintf("select id, api, action, params, created, updated from %s", history.TableName())
+	sql := fmt.Sprintf("select id, name, api, action, params, created, updated from %s", history.TableName())
 	cond := history.Condition() + condition
 	if cond != "" {
 		sql = fmt.Sprintf("%s where %s", sql, cond)
@@ -96,7 +105,7 @@ func (history *History) Query(db *sql.DB, condition string) ([]table.ITable, err
 	res := make([]table.ITable, 0)
 	for rows.Next() {
 		history := NewHistory()
-		if err := rows.Scan(&history.ID, &history.API, &history.Action, &history.Params, &history.Created, &history.Updated); err != nil {
+		if err := rows.Scan(&history.ID, &history.Name, &history.API, &history.Action, &history.Params, &history.Created, &history.Updated); err != nil {
 			return res, err
 		}
 		res = append(res, history)
@@ -111,8 +120,8 @@ func (history *History) Insert(tx *sql.Tx) error {
 	}
 	history.Created = time.Now()
 	history.Updated = history.Created
-	res, err := tx.Exec(fmt.Sprintf("insert into %s(api, action, params, created, updated) values(?, ?, ?, ?, ?)", history.TableName()),
-		history.API, history.Action, history.Params, history.Created, history.Updated)
+	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, api, action, params, created, updated) values(?, ?, ?, ?, ?, ?)", history.TableName()),
+		history.Name, history.API, history.Action, history.Params, history.Created, history.Updated)
 	if err != nil {
 		return err
 	}
@@ -151,8 +160,8 @@ func (history *History) Update(tx *sql.Tx) error {
 		return err
 	}
 	history.Updated = time.Now()
-	res, err := tx.Exec(fmt.Sprintf("update %s set api=?, action=?, params=?,  created=?, updated=? where id=? ", history.TableName()),
-		history.API, history.Action, history.Params, history.Created, history.Updated, history.ID)
+	res, err := tx.Exec(fmt.Sprintf("update %s set name=?, api=?, action=?, params=?,  created=?, updated=? where id=? ", history.TableName()),
+		history.Name, history.API, history.Action, history.Params, history.Created, history.Updated, history.ID)
 	if err != nil {
 		return err
 	}

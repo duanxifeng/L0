@@ -64,18 +64,16 @@ func Run(addr ...string) {
 		tx.Commit()
 	}
 
-	var statusID int64 = 1
-
+	statusID := int64(1)
+	policyID := int64(0)
 	tpolicy := &policy.Policy{}
 	res, err := tpolicy.Query(model.DB, "")
 	if err != nil {
 		panic(err)
 	}
-	policyID := int64(0)
 	for _, r := range res {
 		policyID = r.(*policy.Policy).ID | policyID
 	}
-
 	for _, user := range users {
 		user.StatusID = statusID
 		user.PolicyID = policyID
@@ -100,6 +98,7 @@ func Run(addr ...string) {
 		var params map[string]string
 		json.Unmarshal([]byte(opolicy.Params), &params)
 		action := opolicy.Action
+		name := opolicy.Name
 		router.RegisterPost(opolicy.API, func(c *gin.Context) {
 			url := c.Request.URL.String()
 			if !strings.Contains(url, "-get") {
@@ -111,6 +110,7 @@ func Run(addr ...string) {
 				history := &history.History{
 					API:     url,
 					Action:  action,
+					Name:    name,
 					Params:  string(paramsBytes),
 					Created: time.Now(),
 					Updated: time.Now(),
@@ -193,7 +193,7 @@ func init() {
 			descrStr += fmt.Sprintln(descrs[k])
 		}
 		policys = append(policys, &policy.Policy{
-			Name:   "操作查询",
+			Name:   "用户账户可用的操作查询",
 			Descr:  descrStr,
 			API:    "/policy-get",
 			Action: action,
@@ -236,7 +236,7 @@ func init() {
 		}
 
 		policys = append(policys, &policy.Policy{
-			Name:   "状态查询",
+			Name:   "用户账号及账号的可用状态查询",
 			Descr:  descrStr,
 			API:    "/status-get",
 			Action: action,
@@ -252,6 +252,7 @@ func init() {
 		action := "全局信息"
 		history := &history.History{
 		// ID    int64        `json:"id"`
+		// Name    string        `json:"name"`
 		// API    string        `json:"api"`
 		// Action    string        `json:"action"`
 		// Params    string        `json:"params"`
@@ -263,12 +264,14 @@ func init() {
 
 		descrs := make(map[string]string, 0)
 		descrs["id"] = "id:操作记录ID"
-		descrs["api"] = "name:操作api"
+		descrs["name"] = "name:操作记录名称"
+		descrs["api"] = "api:操作api"
 		descrs["action"] = "name:操作类型"
 		descrs["params"] = "params:操作参数"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
+		delete(params, "api")
 		delete(params, "params")
 		delete(params, "created")
 		delete(params, "updated")
@@ -280,7 +283,7 @@ func init() {
 			descrStr += fmt.Sprintln(descrs[k])
 		}
 		policys = append(policys, &policy.Policy{
-			Name:   "操作记录查询",
+			Name:   "用户账号的操作记录查询",
 			Descr:  descrStr,
 			API:    "/history-get",
 			Action: action,
@@ -317,6 +320,8 @@ func init() {
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
+		delete(params, "password")
+		delete(params, "metadata")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
@@ -357,8 +362,6 @@ func init() {
 		handlers = append(handlers, userCtrl.Post)
 
 		json.Unmarshal(bytes, &params)
-		delete(params, "policy_id")
-		delete(params, "status_id")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
