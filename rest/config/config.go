@@ -22,9 +22,9 @@ func NewDefaultConfig() *Config {
 	return &Config{
 		DBEngine: "mysql",
 		DBName:   "mydb",
-		DBUser:   "blackcat",
-		DBPWD:    "123",
-		DBHost:   "127.0.0.1",
+		DBUser:   "root",
+		DBPWD:    "root",
+		DBHost:   "192.168.33.10",
 		DBPort:   "3306",
 		DBZone:   "Asia/Shanghai",
 	}

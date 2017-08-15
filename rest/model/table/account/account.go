@@ -67,9 +67,9 @@ func (account *Account) validate(tx *sql.Tx) error {
 	if account.Address == "" {
 		return fmt.Errorf("addr is empty")
 	}
-	if _, err := account.User(tx); err != nil {
-		return fmt.Errorf("user_id %d is not exist", account.UserID)
-	}
+	// if _, err := account.User(tx); err != nil {
+	// 	return fmt.Errorf("user_id %d is not exist", account.UserID)
+	// }
 	if _, err := account.Status(tx); err != nil {
 		return fmt.Errorf("status_id %d is not exist", account.StatusID)
 	}
@@ -95,7 +95,7 @@ func (account *Account) CreateIfNotExist(db *sql.DB) (string, error) {
 
 //Query
 func (account *Account) Query(db *sql.DB, condition string) ([]table.ITable, error) {
-	sql := fmt.Sprintf("select id, addr, user_id, created, updated from %s", account.TableName())
+	sql := fmt.Sprintf("select id, addr, user_id, status_id, created, updated from %s", account.TableName())
 	cond := account.Condition() + condition
 	if cond != "" {
 		sql = fmt.Sprintf("%s where %s", sql, cond)
@@ -110,12 +110,21 @@ func (account *Account) Query(db *sql.DB, condition string) ([]table.ITable, err
 	res := make([]table.ITable, 0)
 	for rows.Next() {
 		account := NewAccount()
-		if err := rows.Scan(&account.ID, &account.Address, &account.UserID, &account.Created, &account.Updated); err != nil {
+		if err := rows.Scan(&account.ID, &account.Address, &account.UserID, &account.StatusID, &account.Created, &account.Updated); err != nil {
 			return res, err
 		}
 		res = append(res, account)
 	}
 	return res, nil
+}
+
+//QueryRow
+func (account *Account) QueryRow(tx *sql.Tx) error {
+	row := tx.QueryRow(fmt.Sprintf("select addr, user_id, status_id, created, updated from %s where id=?", account.TableName()), account.ID)
+	if err := row.Scan(&account.Address, &account.UserID, &account.StatusID, &account.Created, &account.Updated); err != nil {
+		return err
+	}
+	return nil
 }
 
 //Insert
@@ -125,8 +134,8 @@ func (account *Account) Insert(tx *sql.Tx) error {
 	}
 	account.Created = time.Now()
 	account.Updated = account.Created
-	res, err := tx.Exec(fmt.Sprintf("insert into %s(addr, user_id, created, updated) values(?, ?, ?, ?)", account.TableName()),
-		account.Address, account.UserID, account.Created, account.Updated)
+	res, err := tx.Exec(fmt.Sprintf("insert into %s(addr, user_id, status_id, created, updated) values(?, ?, ?, ?, ?)", account.TableName()),
+		account.Address, account.UserID, account.StatusID, account.Created, account.Updated)
 	if err != nil {
 		return err
 	}
@@ -165,8 +174,8 @@ func (account *Account) Update(tx *sql.Tx) error {
 		return err
 	}
 	account.Updated = time.Now()
-	res, err := tx.Exec(fmt.Sprintf("update %s set addr=?, user_id=?,  created=?, updated=? where id=? ", account.TableName()),
-		account.Address, account.UserID, account.Created, account.Updated, account.ID)
+	res, err := tx.Exec(fmt.Sprintf("update %s set addr=?, user_id=?, status_id=?, created=?, updated=? where id=? ", account.TableName()),
+		account.Address, account.UserID, account.StatusID, account.Created, account.Updated, account.ID)
 	if err != nil {
 		return err
 	}

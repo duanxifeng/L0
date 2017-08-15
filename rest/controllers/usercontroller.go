@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 
@@ -55,14 +56,33 @@ func (userCtrl *UserController) Post(c *gin.Context) {
 }
 
 func (userCtrl *UserController) Put(c *gin.Context) {
-	user := user.NewUser()
-	if err := c.BindJSON(user); err != nil {
+	var values map[string]interface{}
+	if err := c.BindJSON(&values); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	user := user.NewUser()
+	user.ID = int64(values["id"].(float64))
 	tx, _ := model.DB.Begin()
+	if err := user.QueryRow(tx); err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	bytes, _ := json.Marshal(user)
+	var tvalues map[string]interface{}
+	json.Unmarshal(bytes, &tvalues)
+	for k, v := range values {
+		tvalues[k] = v
+	}
+	bytes, _ = json.Marshal(tvalues)
+	json.Unmarshal(bytes, user)
 
 	if err := user.Update(tx); err != nil {
 		tx.Rollback()
