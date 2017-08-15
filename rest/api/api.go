@@ -385,9 +385,9 @@ func init() {
 		delete(params, "password")
 		delete(params, "metadata")
 		delete(params, "policy_id")
-		delete(params, "status_id")
 		delete(params, "created")
 		delete(params, "updated")
+		params["status_id"] = 4
 		paramsBytes, _ = json.Marshal(params)
 		descrStr = `注销用户账户
 所需参数解析:
