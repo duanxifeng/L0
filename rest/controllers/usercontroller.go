@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 
+	"fmt"
+
 	"github.com/bocheninc/L0/rest/model"
 	"github.com/bocheninc/L0/rest/model/table/user"
 	gin "gopkg.in/gin-gonic/gin.v1"
@@ -116,6 +118,33 @@ func (userCtrl *UserController) Delete(c *gin.Context) {
 
 	tx.Commit()
 	c.JSON(http.StatusOK, user)
+}
+
+func (userCtrl *UserController) Login(c *gin.Context) {
+	user := user.NewUser()
+	if err := c.BindJSON(&user); err != nil && err != io.EOF {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	users, err := user.Query(model.DB, "")
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if len(users) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"error": fmt.Errorf("用户名与密码验证失败").Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, users[0])
 }
 
 func NewUserController() *UserController {

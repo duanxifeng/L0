@@ -679,6 +679,84 @@ func init() {
 			Params: string(paramsBytes),
 		})
 		handlers = append(handlers, transactionCtrl.Post)
+	}
 
+	//***********************************************************************************
+	//权限管理 --- 用户账户登录与验证
+	//***********************************************************************************
+	{
+		action := "权限管理"
+		user := &user.User{
+		// ID          int64        `json:"id"`
+		// Name        string       `json:"name"`
+		// PassWord    string       `json:"password"`
+		// Metadata    string       `json:"metadata"`
+		// PolicyID    int64        `json:"policy_id"`
+		// StatusID    int64        `json:"status_id"`
+		// Created     time.Time    `json:"created"`
+		// Updated     time.Time    `json:"updated"`
+		}
+		bytes, _ := json.Marshal(user)
+		userCtrl := controllers.NewUserController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:用户账户ID"
+		descrs["name"] = "name:用户账户名称"
+		descrs["password"] = "password:用户账户密码"
+		descrs["metadata"] = "metadata:用户账户附加信息"
+		descrs["policy_id"] = "policy_id:用户账户权限ID"
+		descrs["status_id"] = "status_id:用户账户状态ID"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "metadata")
+		delete(params, "policy_id")
+		delete(params, "status_id")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `用户账户登录与验证
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账户登录与验证",
+			Descr:  descrStr,
+			API:    "/user-login",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, userCtrl.Login)
+
+		policyCtrl := controllers.NewPolicyController()
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "id")
+		delete(params, "name")
+		delete(params, "password")
+		delete(params, "metadata")
+		delete(params, "status_id")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `用户账户分级分类管理
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "用户账户分级分类管理",
+			Descr:  descrStr,
+			API:    "/multiple-policy-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, policyCtrl.MultipleGet)
 	}
 }

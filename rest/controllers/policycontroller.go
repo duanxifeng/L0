@@ -98,6 +98,35 @@ func (policyCtrl *PolicyController) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, policy)
 }
 
+func (policyCtrl *PolicyController) MultipleGet(c *gin.Context) {
+	type MultiplePolicy struct {
+		PolicyID int64 `json:"policy_id"`
+	}
+	mPolicy := &MultiplePolicy{}
+	if err := c.BindJSON(&mPolicy); err != nil && err != io.EOF {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	tpolicy := policy.NewPolicy()
+	policys, err := tpolicy.Query(model.DB, "")
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	var tpolicys []*policy.Policy
+	for _, tpolicy := range policys {
+		if mPolicy.PolicyID&tpolicy.(*policy.Policy).ID > 0 {
+			tpolicys = append(tpolicys, tpolicy.(*policy.Policy))
+		}
+	}
+	c.JSON(http.StatusOK, tpolicys)
+}
+
 func NewPolicyController() *PolicyController {
 	return &PolicyController{}
 }
