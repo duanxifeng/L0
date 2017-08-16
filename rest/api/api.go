@@ -682,7 +682,7 @@ func init() {
 	}
 
 	//***********************************************************************************
-	//权限管理 --- 用户账户登录与验证
+	//权限管理 --- 用户账户登录与验证 & 用户账户分级分类管理
 	//***********************************************************************************
 	{
 		action := "权限管理"
@@ -758,5 +758,94 @@ func init() {
 			Params: string(paramsBytes),
 		})
 		handlers = append(handlers, policyCtrl.MultipleGet)
+	}
+
+	//***********************************************************************************
+	//查询历史数据 --- 查询历史变更记录
+	//***********************************************************************************
+	{
+		action := "查询历史数据"
+
+		transaction := &transaction.Transaction{
+		// ID        int64        `json:"id"`
+		// FromChain    string        `json:"from_chain"`
+		// ToChain        string        `json:"to_chain"`
+		// Type        int64        `json:"tx_type"`
+		// Nonce        int64        `json:"tx_nonce"`
+		// Sender        string        `json:"sender"`
+		// Receiver    string        `json:"receiver"`
+		// Amount        uint64        `json:"amount"`
+		// Fee        uint64        `json:"fee"`
+		// Signature    string        `json:"signature"`
+		// Created        time.Time    `json:"created"`
+		// Payload        string        `json:"payload"`
+		// Hash        string        `json:"hash"`
+		// Height        uint64        `json:"height"`
+		}
+		bytes, _ := json.Marshal(transaction)
+		transactionCtrl := controllers.NewTransactionController()
+
+		descrs := make(map[string]string, 0)
+		descrs["id"] = "id:交易ID"
+		descrs["from_chain"] = "from_chain:交易来源Chain"
+		descrs["to_chain"] = "to_chain:交易目的Chain"
+		descrs["tx_type"] = "tx_type:交易类型"
+		descrs["tx_nonce"] = "tx_nonce:交易Nonce"
+		descrs["sender"] = "sender:交易发送方,如果多个,以逗号区分"
+		descrs["receiver"] = "receiver:交易接收方,如果多个,以逗号区分"
+		descrs["amount"] = "amount:交易金额"
+		descrs["fee"] = "fee:更新手续费"
+		descrs["signature"] = "signature:交易签名"
+		descrs["created"] = "created:交易时间"
+		descrs["payload"] = "payload:交易附加信息"
+		descrs["hash"] = "hash:交易哈希值"
+		descrs["height"] = "height:交易区块高度"
+
+		var params map[string]interface{}
+		json.Unmarshal(bytes, &params)
+		delete(params, "tx_nonce")
+		delete(params, "amount")
+		delete(params, "fee")
+		delete(params, "signature")
+		delete(params, "created")
+		delete(params, "payload")
+		paramsBytes, _ := json.Marshal(params)
+		descrStr := `查询历史变更记录
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "查询历史变更记录",
+			Descr:  descrStr,
+			API:    "/account-transaction-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, transactionCtrl.Get)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "tx_nonce")
+		delete(params, "amount")
+		delete(params, "fee")
+		delete(params, "signature")
+		delete(params, "created")
+		delete(params, "payload")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `查询用户账户当前状态信息
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "查询用户账户当前状态信息",
+			Descr:  descrStr,
+			API:    "/user-transaction-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, transactionCtrl.Get)
 	}
 }
