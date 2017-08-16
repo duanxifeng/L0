@@ -329,7 +329,7 @@ func init() {
 		descrs["metadata"] = "metadata:用户账户附加信息"
 		descrs["policy_id"] = "policy_id:用户账户权限ID"
 		descrs["status_id"] = "status_id:用户账户状态ID"
-		descrs["query_range"] = "query_range:用户账户数据范围查询权限"
+		descrs["query_range"] = "query_range:数据范围查询权限, 用户账户ID，以逗号分隔"
 		descrs["created"] = "created:创建时间"
 		descrs["updated"] = "updated:更新时间"
 
@@ -713,7 +713,7 @@ func init() {
 		descrs["metadata"] = "metadata:用户账户附加信息"
 		descrs["policy_id"] = "policy_id:用户账户权限ID"
 		descrs["status_id"] = "status_id:用户账户状态ID"
-		descrs["query_range"] = "query_range:用户账户数据范围查询权限"
+		descrs["query_range"] = "query_range:数据范围查询权限, 用户账户ID，以逗号分隔"
 		descrs["created"] = "created:创建时间"
 		descrs["updated"] = "updated:更新时间"
 
@@ -859,7 +859,7 @@ func init() {
 		descrs["metadata"] = "metadata:用户账户附加信息"
 		descrs["policy_id"] = "policy_id:用户账户权限ID"
 		descrs["status_id"] = "status_id:用户账户状态ID"
-		descrs["query_range"] = "query_range:用户账户数据范围查询权限"
+		descrs["query_range"] = "query_range:数据范围查询权限, 用户账户ID，以逗号分隔"
 		descrs["created"] = "created:创建时间"
 		descrs["updated"] = "updated:更新时间"
 
@@ -911,6 +911,6 @@ func init() {
 			Action: action,
 			Params: string(paramsBytes),
 		})
-		handlers = append(handlers, transactionCtrl.History)
+		handlers = append(handlers, transactionCtrl.QueryRange)
 	}
 }
