@@ -173,6 +173,26 @@ func (accountCtrl *AccountController) Import(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func (accountCtrl *AccountController) UserInfo(c *gin.Context) {
+	account := account.NewAccount()
+	if err := c.BindJSON(&account); err != nil && err != io.EOF {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	accounts, err := account.Query(model.DB, "")
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, accounts)
+}
+
 func NewAccountController() *AccountController {
 	return &AccountController{}
 }

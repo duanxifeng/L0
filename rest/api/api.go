@@ -765,50 +765,30 @@ func init() {
 	//***********************************************************************************
 	{
 		action := "查询历史数据"
-
-		transaction := &transaction.Transaction{
+		account := &account.Account{
 		// ID        int64        `json:"id"`
-		// FromChain    string        `json:"from_chain"`
-		// ToChain        string        `json:"to_chain"`
-		// Type        int64        `json:"tx_type"`
-		// Nonce        int64        `json:"tx_nonce"`
-		// Sender        string        `json:"sender"`
-		// Receiver    string        `json:"receiver"`
-		// Amount        uint64        `json:"amount"`
-		// Fee        uint64        `json:"fee"`
-		// Signature    string        `json:"signature"`
-		// Created        time.Time    `json:"created"`
-		// Payload        string        `json:"payload"`
-		// Hash        string        `json:"hash"`
-		// Height        uint64        `json:"height"`
+		// Address   string        `json:"addr"`
+		// PassWord  string       `json:"password"`
+		// UserID    int64        `json:"user_id"`
+		// StatusID  int64        `json:"status_id"`
 		}
-		bytes, _ := json.Marshal(transaction)
+		bytes, _ := json.Marshal(account)
+		accountCtrl := controllers.NewAccountController()
 		transactionCtrl := controllers.NewTransactionController()
 
 		descrs := make(map[string]string, 0)
-		descrs["id"] = "id:交易ID"
-		descrs["from_chain"] = "from_chain:交易来源Chain"
-		descrs["to_chain"] = "to_chain:交易目的Chain"
-		descrs["tx_type"] = "tx_type:交易类型"
-		descrs["tx_nonce"] = "tx_nonce:交易Nonce"
-		descrs["sender"] = "sender:交易发送方,如果多个,以逗号区分"
-		descrs["receiver"] = "receiver:交易接收方,如果多个,以逗号区分"
-		descrs["amount"] = "amount:交易金额"
-		descrs["fee"] = "fee:更新手续费"
-		descrs["signature"] = "signature:交易签名"
-		descrs["created"] = "created:交易时间"
-		descrs["payload"] = "payload:交易附加信息"
-		descrs["hash"] = "hash:交易哈希值"
-		descrs["height"] = "height:交易区块高度"
+		descrs["id"] = "id:用户账号ID"
+		descrs["addr"] = "addr:用户账号地址"
+		descrs["user_id"] = "user_id:用户账号所属用户账户ID"
+		descrs["status_id"] = "status_id:用户账号的状态ID"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
-		delete(params, "tx_nonce")
-		delete(params, "amount")
-		delete(params, "fee")
-		delete(params, "signature")
+		delete(params, "status_id")
 		delete(params, "created")
-		delete(params, "payload")
+		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
 		descrStr := `查询历史变更记录
 所需参数解析:
@@ -823,15 +803,14 @@ func init() {
 			Action: action,
 			Params: string(paramsBytes),
 		})
-		handlers = append(handlers, transactionCtrl.Get)
+		handlers = append(handlers, transactionCtrl.History)
 
 		json.Unmarshal(bytes, &params)
-		delete(params, "tx_nonce")
-		delete(params, "amount")
-		delete(params, "fee")
-		delete(params, "signature")
+		delete(params, "id")
+		delete(params, "addr")
+		delete(params, "status_id")
 		delete(params, "created")
-		delete(params, "payload")
+		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
 		descrStr = `查询用户账户当前状态信息
 所需参数解析:
@@ -846,6 +825,6 @@ func init() {
 			Action: action,
 			Params: string(paramsBytes),
 		})
-		handlers = append(handlers, transactionCtrl.Get)
+		handlers = append(handlers, accountCtrl.UserInfo)
 	}
 }
