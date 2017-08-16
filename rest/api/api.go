@@ -315,6 +315,7 @@ func init() {
 		// Metadata    string       `json:"metadata"`
 		// PolicyID    int64        `json:"policy_id"`
 		// StatusID    int64        `json:"status_id"`
+		// Range       string        `json:"query_range"
 		// Created     time.Time    `json:"created"`
 		// Updated     time.Time    `json:"updated"`
 		}
@@ -328,6 +329,7 @@ func init() {
 		descrs["metadata"] = "metadata:用户账户附加信息"
 		descrs["policy_id"] = "policy_id:用户账户权限ID"
 		descrs["status_id"] = "status_id:用户账户状态ID"
+		descrs["query_range"] = "query_range:用户账户数据范围查询权限"
 		descrs["created"] = "created:创建时间"
 		descrs["updated"] = "updated:更新时间"
 
@@ -335,6 +337,7 @@ func init() {
 		json.Unmarshal(bytes, &params)
 		delete(params, "password")
 		delete(params, "metadata")
+		delete(params, "query_range")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
@@ -355,6 +358,7 @@ func init() {
 
 		json.Unmarshal(bytes, &params)
 		delete(params, "id")
+		delete(params, "query_range")
 		delete(params, "updated")
 		delete(params, "created")
 		params["policy_id"] = 0
@@ -378,6 +382,7 @@ func init() {
 		json.Unmarshal(bytes, &params)
 		delete(params, "policy_id")
 		delete(params, "status_id")
+		delete(params, "query_range")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
@@ -400,6 +405,7 @@ func init() {
 		delete(params, "name")
 		delete(params, "password")
 		delete(params, "metadata")
+		delete(params, "query_range")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
@@ -693,6 +699,7 @@ func init() {
 		// Metadata    string       `json:"metadata"`
 		// PolicyID    int64        `json:"policy_id"`
 		// StatusID    int64        `json:"status_id"`
+		// Range       string        `json:"query_range"
 		// Created     time.Time    `json:"created"`
 		// Updated     time.Time    `json:"updated"`
 		}
@@ -706,6 +713,7 @@ func init() {
 		descrs["metadata"] = "metadata:用户账户附加信息"
 		descrs["policy_id"] = "policy_id:用户账户权限ID"
 		descrs["status_id"] = "status_id:用户账户状态ID"
+		descrs["query_range"] = "query_range:用户账户数据范围查询权限"
 		descrs["created"] = "created:创建时间"
 		descrs["updated"] = "updated:更新时间"
 
@@ -715,6 +723,7 @@ func init() {
 		delete(params, "metadata")
 		delete(params, "policy_id")
 		delete(params, "status_id")
+		delete(params, "query_range")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ := json.Marshal(params)
@@ -741,6 +750,7 @@ func init() {
 		delete(params, "password")
 		delete(params, "metadata")
 		delete(params, "status_id")
+		delete(params, "query_range")
 		delete(params, "created")
 		delete(params, "updated")
 		paramsBytes, _ = json.Marshal(params)
@@ -773,7 +783,6 @@ func init() {
 		// StatusID  int64        `json:"status_id"`
 		}
 		bytes, _ := json.Marshal(account)
-		accountCtrl := controllers.NewAccountController()
 		transactionCtrl := controllers.NewTransactionController()
 
 		descrs := make(map[string]string, 0)
@@ -806,6 +815,7 @@ func init() {
 		})
 		handlers = append(handlers, transactionCtrl.History)
 
+		accountCtrl := controllers.NewAccountController()
 		json.Unmarshal(bytes, &params)
 		delete(params, "id")
 		delete(params, "addr")
@@ -827,5 +837,80 @@ func init() {
 			Params: string(paramsBytes),
 		})
 		handlers = append(handlers, accountCtrl.UserInfo)
+
+		user := &user.User{
+		// ID          int64        `json:"id"`
+		// Name        string       `json:"name"`
+		// PassWord    string       `json:"password"`
+		// Metadata    string       `json:"metadata"`
+		// PolicyID    int64        `json:"policy_id"`
+		// StatusID    int64        `json:"status_id"`
+		// Range       string        `json:"query_range"
+		// Created     time.Time    `json:"created"`
+		// Updated     time.Time    `json:"updated"`
+		}
+		bytes, _ = json.Marshal(user)
+		userCtrl := controllers.NewUserController()
+
+		descrs = make(map[string]string, 0)
+		descrs["id"] = "id:用户账户ID"
+		descrs["name"] = "name:用户账户名称"
+		descrs["password"] = "password:用户账户密码"
+		descrs["metadata"] = "metadata:用户账户附加信息"
+		descrs["policy_id"] = "policy_id:用户账户权限ID"
+		descrs["status_id"] = "status_id:用户账户状态ID"
+		descrs["query_range"] = "query_range:用户账户数据范围查询权限"
+		descrs["created"] = "created:创建时间"
+		descrs["updated"] = "updated:更新时间"
+
+		params = make(map[string]interface{})
+		json.Unmarshal(bytes, &params)
+		delete(params, "name")
+		delete(params, "password")
+		delete(params, "metadata")
+		delete(params, "policy_id")
+		delete(params, "status_id")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `设置数据范围查询
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "设置数据范围查询",
+			Descr:  descrStr,
+			API:    "/range-get",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, userCtrl.Put)
+
+		json.Unmarshal(bytes, &params)
+		delete(params, "name")
+		delete(params, "password")
+		delete(params, "metadata")
+		delete(params, "policy_id")
+		delete(params, "status_id")
+		delete(params, "query_range")
+		delete(params, "created")
+		delete(params, "updated")
+		paramsBytes, _ = json.Marshal(params)
+		descrStr = `数据范围查询
+所需参数解析:
+`
+		for k := range params {
+			descrStr += fmt.Sprintln(descrs[k])
+		}
+		policys = append(policys, &policy.Policy{
+			Name:   "数据范围查询",
+			Descr:  descrStr,
+			API:    "/range-post",
+			Action: action,
+			Params: string(paramsBytes),
+		})
+		handlers = append(handlers, transactionCtrl.History)
 	}
 }

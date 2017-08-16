@@ -22,6 +22,7 @@ type User struct {
 	Metadata string    `json:"metadata"`
 	PolicyID int64     `json:"policy_id"`
 	StatusID int64     `json:"status_id"`
+	Range    string    `json:"query_range"`
 	Created  time.Time `json:"created"`
 	Updated  time.Time `json:"updated"`
 	policys  []*policy.Policy
@@ -90,6 +91,7 @@ func (user *User) CreateIfNotExist(db *sql.DB) (string, error) {
 	metadata TEXT NOT NULL,
 	policy_id INT NOT NULL,
 	status_id INT NOT NULL,
+	query_range VARCHAR(255) NOT NULL,
 	created DATETIME NOT NULL,
 	updated DATETIME NOT NULL,
 	PRIMARY KEY (id)
@@ -101,7 +103,7 @@ func (user *User) CreateIfNotExist(db *sql.DB) (string, error) {
 
 //Query
 func (user *User) Query(db *sql.DB, condition string) ([]table.ITable, error) {
-	sql := fmt.Sprintf("select id, name, password, metadata, policy_id, status_id, created, updated from %s", user.TableName())
+	sql := fmt.Sprintf("select id, name, password, metadata, policy_id, status_id, query_range, created, updated from %s", user.TableName())
 	cond := user.Condition() + condition
 	if cond != "" {
 		sql = fmt.Sprintf("%s where %s", sql, cond)
@@ -116,7 +118,7 @@ func (user *User) Query(db *sql.DB, condition string) ([]table.ITable, error) {
 	res := make([]table.ITable, 0)
 	for rows.Next() {
 		user := NewUser()
-		if err := rows.Scan(&user.ID, &user.Name, &user.PassWord, &user.Metadata, &user.PolicyID, &user.StatusID, &user.Created, &user.Updated); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.PassWord, &user.Metadata, &user.PolicyID, &user.StatusID, &user.Range, &user.Created, &user.Updated); err != nil {
 			return res, err
 		}
 		res = append(res, user)
@@ -126,8 +128,8 @@ func (user *User) Query(db *sql.DB, condition string) ([]table.ITable, error) {
 
 //QueryRow
 func (user *User) QueryRow(tx *sql.Tx) error {
-	row := tx.QueryRow(fmt.Sprintf("select name, password, metadata, policy_id, status_id, created, updated from %s where id=?", user.TableName()), user.ID)
-	if err := row.Scan(&user.Name, &user.PassWord, &user.Metadata, &user.PolicyID, &user.StatusID, &user.Created, &user.Updated); err != nil {
+	row := tx.QueryRow(fmt.Sprintf("select name, password, metadata, policy_id, status_id, query_range, created, updated from %s where id=?", user.TableName()), user.ID)
+	if err := row.Scan(&user.Name, &user.PassWord, &user.Metadata, &user.PolicyID, &user.StatusID, &user.Range, &user.Created, &user.Updated); err != nil {
 		return err
 	}
 	return nil
@@ -140,8 +142,8 @@ func (user *User) Insert(tx *sql.Tx) error {
 	}
 	user.Created = time.Now()
 	user.Updated = user.Created
-	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, created, updated) values(?, ?, ?, ?, ?, ?, ?)", user.TableName()),
-		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Created, user.Updated)
+	res, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, query_range, created, updated) values(?, ?, ?, ?, ?, ?, ?, ?)", user.TableName()),
+		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Range, user.Created, user.Updated)
 	if err != nil {
 		return err
 	}
@@ -180,8 +182,8 @@ func (user *User) Update(tx *sql.Tx) error {
 		return err
 	}
 	user.Updated = time.Now()
-	res, err := tx.Exec(fmt.Sprintf("update %s set name=?, password=?, metadata=?, policy_id=?, status_id=?, created=?, updated=? where id=? ", user.TableName()),
-		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Created, user.Updated, user.ID)
+	res, err := tx.Exec(fmt.Sprintf("update %s set name=?, password=?, metadata=?, policy_id=?, status_id=?, query_range, created=?, updated=? where id=? ", user.TableName()),
+		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Range, user.Created, user.Updated, user.ID)
 	if err != nil {
 		return err
 	}
@@ -198,8 +200,8 @@ func (user *User) InsertOrUpdate(tx *sql.Tx) error {
 	}
 	user.Created = time.Now()
 	user.Updated = user.Created
-	_, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, created, updated) values(?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE password=values(password), metadata=values(metadata), policy_id=values(policy_id), status_id= values(status_id), created=values(created), updated=values(updated)", user.TableName()),
-		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Created, user.Updated)
+	_, err := tx.Exec(fmt.Sprintf("insert into %s(name, password, metadata, policy_id, status_id, query_range, created, updated) values(?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE password=values(password), metadata=values(metadata), policy_id=values(policy_id), status_id= values(status_id), query_range=values(query_range), created=values(created), updated=values(updated)", user.TableName()),
+		user.Name, user.PassWord, user.Metadata, user.PolicyID, user.StatusID, user.Range, user.Created, user.Updated)
 	if err != nil {
 		return err
 	}
