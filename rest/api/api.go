@@ -786,6 +786,7 @@ func init() {
 
 		var params map[string]interface{}
 		json.Unmarshal(bytes, &params)
+		delete(params, "addr")
 		delete(params, "status_id")
 		delete(params, "created")
 		delete(params, "updated")
