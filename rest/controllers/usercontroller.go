@@ -121,15 +121,15 @@ func (userCtrl *UserController) Delete(c *gin.Context) {
 }
 
 func (userCtrl *UserController) Login(c *gin.Context) {
-	user := user.NewUser()
-	if err := c.BindJSON(&user); err != nil && err != io.EOF {
+	tuser := user.NewUser()
+	if err := c.BindJSON(&tuser); err != nil && err != io.EOF {
 		c.JSON(http.StatusOK, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	users, err := user.Query(model.DB, "")
+	users, err := tuser.Query(model.DB, "")
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"error": err.Error(),
@@ -138,6 +138,13 @@ func (userCtrl *UserController) Login(c *gin.Context) {
 	}
 
 	if len(users) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"error": fmt.Errorf("用户名不存在").Error(),
+		})
+		return
+	}
+
+	if users[0].(*user.User).PassWord != tuser.PassWord {
 		c.JSON(http.StatusOK, gin.H{
 			"error": fmt.Errorf("用户名与密码验证失败").Error(),
 		})

@@ -136,8 +136,8 @@ func (transactionCtrl *TransactionController) History(c *gin.Context) {
 			senders += ","
 			receivers += ","
 		}
-		senders += addr
-		receivers += addr
+		senders += fmt.Sprintf("'%s'", addr)
+		receivers += fmt.Sprintf("'%s'", addr)
 	}
 	senders += ")"
 	receivers += ")"
@@ -179,7 +179,7 @@ func (transactionCtrl *TransactionController) QueryRange(c *gin.Context) {
 		if index != 0 {
 			ids += ","
 		}
-		ids += userID
+		ids += fmt.Sprintf("'%s'", userID)
 	}
 	ids += ")"
 
@@ -207,8 +207,8 @@ func (transactionCtrl *TransactionController) QueryRange(c *gin.Context) {
 			senders += ","
 			receivers += ","
 		}
-		senders += addr
-		receivers += addr
+		senders += fmt.Sprintf("'%s'", addr)
+		receivers += fmt.Sprintf("'%s'", addr)
 	}
 	senders += ")"
 	receivers += ")"
