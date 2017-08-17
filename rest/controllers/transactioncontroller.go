@@ -12,6 +12,7 @@ import (
 	"github.com/bocheninc/L0/rest/model/table/account"
 	"github.com/bocheninc/L0/rest/model/table/transaction"
 	"github.com/bocheninc/L0/rest/model/table/user"
+	"github.com/bocheninc/L0/rest/rpc"
 	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -101,6 +102,38 @@ func (transactionCtrl *TransactionController) Delete(c *gin.Context) {
 	}
 
 	tx.Commit()
+	c.JSON(http.StatusOK, transaction)
+}
+
+func (transactionCtrl *TransactionController) Transfer(c *gin.Context) {
+	transaction := transaction.NewTransaction()
+	if err := c.BindJSON(transaction); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	format := `{"id":1, "method":"Transaction.Broadcast", "params":["%s"]}`
+	str := fmt.Sprintf(format)
+	rpc.Send(str)
+
+	c.JSON(http.StatusOK, transaction)
+}
+
+func (transactionCtrl *TransactionController) Transfers(c *gin.Context) {
+	transaction := transaction.NewTransaction()
+	if err := c.BindJSON(transaction); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	format := `{"id":1, "method":"Transaction.Broadcast", "params":["%s"]}`
+	str := fmt.Sprintf(format)
+	rpc.Send(str)
+
 	c.JSON(http.StatusOK, transaction)
 }
 
